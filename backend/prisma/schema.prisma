@@ -1,0 +1,150 @@
+// schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          Int      @id @default(autoincrement())
+  email       String   @unique
+  password    String   // Will be hashed with bcrypt!
+  firstName   String
+  lastName    String
+  role        UserRole
+  department  Department? @relation(fields: [departmentId], references: [id])
+  departmentId Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // A User (DepartmentHead) can make many Requisitions and ServiceRequests
+  requisitions      Requisition[]
+  serviceRequests   ServiceRequest[]
+  processedRequisitions Requisition[] @relation("ProcessedRequisitions")
+  processedServiceRequests ServiceRequest[] @relation("ProcessedServiceRequests")
+}
+
+enum UserRole {
+  STOREKEEPER
+  DEPARTMENT_HEAD
+  PROCUREMENT_OFFICER
+  ADMIN
+}
+
+model Department {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // A Department has many Users
+  users     User[]
+  // A Department has many Requisitions and ServiceRequests
+  requisitions Requisition[]
+  serviceRequests ServiceRequest[]
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  description String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // A Category has many Items
+  items     Item[]
+}
+
+model Item {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  quantity    Int      @default(0)
+  minQuantity Int      @default(0) // For low-stock alerts
+  unit        String   // e.g., "box", "pack", "each", "unit"
+  category    Category @relation(fields: [categoryId], references: [id])
+  categoryId  Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // An Item can be in many Transactions (Receipts/Issues) and Requisitions
+  transactions Transaction[]
+  requisitions RequisitionItem[]
+}
+
+model Transaction {
+  id          Int       @id @default(autoincrement())
+  type        TransactionType
+  item        Item      @relation(fields: [itemId], references: [id])
+  itemId      Int
+  quantity    Int       // +ve for RECEIVE, -ve for ISSUE
+  notes       String?
+  user        User      @relation(fields: [userId], references: [id]) // Who performed the action
+  userId      Int
+  requisition Requisition? @relation(fields: [requisitionId], references: [id]) // Links an ISSUE to an approved requisition
+  requisitionId Int?
+  createdAt   DateTime  @default(now())
+
+  @@index([itemId])
+  @@index([createdAt])
+}
+
+enum TransactionType {
+  RECEIVE
+  ISSUE
+  ADJUST
+}
+
+model Requisition {
+  id            Int         @id @default(autoincrement())
+  title         String
+  description   String?     // Provides context for the request
+  status        RequisitionStatus @default(PENDING)
+  createdBy     User        @relation(fields: [createdById], references: [id])
+  createdById   Int
+  department    Department  @relation(fields: [departmentId], references: [id])
+  departmentId  Int
+  items         RequisitionItem[] // Items requested
+  reasonForRejection String?
+  processedBy   User?       @relation("ProcessedRequisitions", fields: [processedById], references: [id]) // The Procurement Officer who approved/rejected
+  processedById Int?
+  processedAt   DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model RequisitionItem {
+  id            Int       @id @default(autoincrement())
+  requisition   Requisition @relation(fields: [requisitionId], references: [id], onDelete: Cascade)
+  requisitionId Int
+  item          Item      @relation(fields: [itemId], references: [id])
+  itemId        Int
+  quantity      Int
+}
+
+model ServiceRequest {
+  id          Int      @id @default(autoincrement())
+  title       String   // e.g., "Air Conditioner Repair in Room 205"
+  description String   // e.g., "The AC unit is leaking water and not cooling effectively."
+  status      RequisitionStatus @default(PENDING) // Shares the same status enum
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  createdById Int
+  department  Department @relation(fields: [departmentId], references: [id])
+  departmentId Int
+  reasonForRejection String?
+  processedBy User?    @relation("ProcessedServiceRequests", fields: [processedById], references: [id])
+  processedById Int?
+  processedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum RequisitionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  FULFILLED
+}
