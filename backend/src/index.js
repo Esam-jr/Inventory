@@ -1,10 +1,13 @@
-require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
-const helmet = require("helmet");
-const morgan = require("morgan");
+import "dotenv/config";
+import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import morgan from "morgan";
 
-const { authenticateToken } = require("./middleware/auth");
+import { authenticateToken } from "./middleware/auth.js";
+import authRoutes from "./routes/auth.route.js";
+import userRoutes from "./routes/users.route.js";
+import itemRoutes from "./routes/item.route.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -20,12 +23,12 @@ app.get("/api/health", (req, res) => {
   res.json({ message: "Server is running!" });
 });
 
-// Auth routes (we'll create these next)
-app.use("/api/auth", require("./routes/auth"));
+// Auth routes
+app.use("/api/auth", authRoutes);
 
 // Protected routes
-app.use("/api/users", authenticateToken, require("./routes/users"));
-app.use("/api/items", authenticateToken, require("./routes/items"));
+app.use("/api/users", authenticateToken, userRoutes);
+app.use("/api/items", authenticateToken, itemRoutes);
 
 // Error handling middleware
 app.use((error, req, res, next) => {

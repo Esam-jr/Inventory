@@ -1,7 +1,7 @@
-const jwt = require("jsonwebtoken");
-const prisma = require("../lib/prisma");
+import jwt from "jsonwebtoken";
+import prisma from "../lib/prisma.js";
 
-const authenticateToken = async (req, res, next) => {
+export const authenticateToken = async (req, res, next) => {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1]; // Bearer TOKEN
 
@@ -33,5 +33,3 @@ const authenticateToken = async (req, res, next) => {
     return res.status(403).json({ error: "Invalid or expired token" });
   }
 };
-
-module.exports = { authenticateToken };
