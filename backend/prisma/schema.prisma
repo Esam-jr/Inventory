@@ -1,4 +1,3 @@
-// schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,7 +10,7 @@ datasource db {
 model User {
   id          Int      @id @default(autoincrement())
   email       String   @unique
-  password    String   // Will be hashed with bcrypt!
+  password    String   
   firstName   String
   lastName    String
   role        UserRole
@@ -20,11 +19,12 @@ model User {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  // A User (DepartmentHead) can make many Requisitions and ServiceRequests
   requisitions      Requisition[]
   serviceRequests   ServiceRequest[]
   processedRequisitions Requisition[] @relation("ProcessedRequisitions")
   processedServiceRequests ServiceRequest[] @relation("ProcessedServiceRequests")
+
+  Transaction Transaction[]
 }
 
 enum UserRole {
@@ -40,9 +40,8 @@ model Department {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // A Department has many Users
   users     User[]
-  // A Department has many Requisitions and ServiceRequests
+
   requisitions Requisition[]
   serviceRequests ServiceRequest[]
 }
@@ -54,7 +53,6 @@ model Category {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // A Category has many Items
   items     Item[]
 }
 
@@ -63,14 +61,13 @@ model Item {
   name        String
   description String?
   quantity    Int      @default(0)
-  minQuantity Int      @default(0) // For low-stock alerts
-  unit        String   // e.g., "box", "pack", "each", "unit"
+  minQuantity Int      @default(0) 
+  unit        String   
   category    Category @relation(fields: [categoryId], references: [id])
   categoryId  Int
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  // An Item can be in many Transactions (Receipts/Issues) and Requisitions
   transactions Transaction[]
   requisitions RequisitionItem[]
 }
@@ -101,19 +98,21 @@ enum TransactionType {
 model Requisition {
   id            Int         @id @default(autoincrement())
   title         String
-  description   String?     // Provides context for the request
+  description   String?     
   status        RequisitionStatus @default(PENDING)
   createdBy     User        @relation(fields: [createdById], references: [id])
   createdById   Int
   department    Department  @relation(fields: [departmentId], references: [id])
   departmentId  Int
-  items         RequisitionItem[] // Items requested
+  items         RequisitionItem[] 
   reasonForRejection String?
   processedBy   User?       @relation("ProcessedRequisitions", fields: [processedById], references: [id]) // The Procurement Officer who approved/rejected
   processedById Int?
   processedAt   DateTime?
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+
+  Transaction Transaction[]
 }
 
 model RequisitionItem {
@@ -127,9 +126,9 @@ model RequisitionItem {
 
 model ServiceRequest {
   id          Int      @id @default(autoincrement())
-  title       String   // e.g., "Air Conditioner Repair in Room 205"
-  description String   // e.g., "The AC unit is leaking water and not cooling effectively."
-  status      RequisitionStatus @default(PENDING) // Shares the same status enum
+  title       String   
+  description String   
+  status      RequisitionStatus @default(PENDING) 
   createdBy   User     @relation(fields: [createdById], references: [id])
   createdById Int
   department  Department @relation(fields: [departmentId], references: [id])
