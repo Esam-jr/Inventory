@@ -12,25 +12,20 @@ import itemRoutes from "./routes/item.route.js";
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
 app.use(helmet());
 app.use(cors());
 app.use(morgan("combined"));
 app.use(express.json());
 
-// Basic health check route
 app.get("/api/health", (req, res) => {
   res.json({ message: "Server is running!" });
 });
 
-// Auth routes
 app.use("/api/auth", authRoutes);
 
-// Protected routes
 app.use("/api/users", authenticateToken, userRoutes);
 app.use("/api/items", authenticateToken, itemRoutes);
 
-// Error handling middleware
 app.use((error, req, res, next) => {
   console.error(error);
   res.status(500).json({ error: "Internal server error" });
