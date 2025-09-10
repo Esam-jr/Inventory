@@ -5,6 +5,7 @@ import {
   login,
   registerUsers,
 } from "../controllers/auth.controller.js";
+import { authenticateToken, authorize } from "../middleware/auth.js";
 
 const router = Router();
 

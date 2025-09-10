@@ -4,7 +4,7 @@ import {
   createItem,
   updateItem,
 } from "../controllers/item.controller.js";
-
+import { authorize } from "../middleware/auth.js";
 const router = Router();
 
 router.get("/", getItems);
