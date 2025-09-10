@@ -2,8 +2,7 @@ node_modules
 dist
 .env
 
-prisma/migrations
-prisma/dev.db
+prisma/seed.js
 
 .DS_Store
 .vscode
