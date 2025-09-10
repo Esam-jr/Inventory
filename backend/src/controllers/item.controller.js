@@ -19,7 +19,6 @@ export const getItems = async (req, res) => {
   }
 };
 export const createItem = async (req, res) => {
-  // Add authorization check here later
   const { name, description, quantity, minQuantity, unit, categoryId } =
     req.body;
 
@@ -28,15 +27,46 @@ export const createItem = async (req, res) => {
       data: {
         name,
         description,
-        quantity,
-        minQuantity,
+        quantity: parseInt(quantity),
+        minQuantity: parseInt(minQuantity),
         unit,
         categoryId: parseInt(categoryId),
       },
+      include: {
+        category: true,
+      },
     });
+
     res.status(201).json(newItem);
   } catch (error) {
     console.error("Error creating item:", error);
     res.status(500).json({ error: "Failed to create item" });
+  }
+};
+export const updateItem = async (req, res) => {
+  const { id } = req.params;
+  const { name, description, quantity, minQuantity, unit, categoryId } =
+    req.body;
+
+  try {
+    const updatedItem = await prisma.item.update({
+      where: { id: parseInt(id) },
+      data: {
+        name,
+        description,
+        quantity: parseInt(quantity),
+        minQuantity: parseInt(minQuantity),
+        unit,
+        categoryId: parseInt(categoryId),
+      },
+      include: {
+        category: true,
+      },
+    });
+
+    res.json(updatedItem);
+  } catch (error) {
+    console.error("Error updating item:", error);
+    res.status(500).json({ error: "Failed to update item" });
   }
 };
