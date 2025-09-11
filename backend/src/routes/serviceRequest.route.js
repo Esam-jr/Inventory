@@ -5,7 +5,7 @@ import {
   getServiceRequestById,
   updateServiceRequestStatus,
   getServiceRequestStats,
-} from "../controllers/serviceRequestController.js";
+} from "../controllers/serviceRequest.controller.js";
 import { authenticateToken, authorize } from "../middleware/auth.js";
 
 const router = express.Router();
