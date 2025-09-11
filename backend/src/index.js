@@ -12,6 +12,7 @@ import requisitionRoutes from "./routes/requisition.route.js";
 import serviceRequestRoutes from "./routes/serviceRequest.route.js";
 import dashboardRoutes from "./routes/dashboard.route.js";
 import transactionRoutes from "./routes/transactions.route.js";
+import reportRoutes from "./routes/report.route.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -33,6 +34,7 @@ app.use("/api/requisitions", authenticateToken, requisitionRoutes);
 app.use("/api/service-requests", authenticateToken, serviceRequestRoutes);
 app.use("/api/dashboard", authenticateToken, dashboardRoutes);
 app.use("/api/transactions", authenticateToken, transactionRoutes);
+app.use("/api/reports", authenticateToken, reportRoutes);
 
 app.use((error, req, res, next) => {
   console.error(error);
