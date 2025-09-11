@@ -4,7 +4,7 @@ import {
   getTransactionStats,
   getTransactionById,
   adjustStock,
-} from "../controllers/transactionController.js";
+} from "../controllers/transaction.controller.js";
 import { authenticateToken, authorize } from "../middleware/auth.js";
 
 const router = express.Router();

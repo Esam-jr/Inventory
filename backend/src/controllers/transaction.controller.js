@@ -92,26 +92,12 @@ export const getTransactionStats = async (req, res) => {
       if (endDate) whereClause.createdAt.lte = new Date(endDate);
     }
 
-    const [typeStats, dailyStats, topItems] = await Promise.all([
+    const [typeStats, topItems, allTransactions] = await Promise.all([
       prisma.transaction.groupBy({
         by: ["type"],
         where: whereClause,
         _count: { id: true },
         _sum: { quantity: true },
-      }),
-
-      prisma.transaction.groupBy({
-        by: ["createdAt"],
-        where: whereClause,
-        _count: { id: true },
-        by: [
-          {
-            createdAt: {
-              interval: "day",
-            },
-          },
-        ],
-        orderBy: { createdAt: "asc" },
       }),
 
       prisma.transaction.groupBy({
@@ -122,7 +108,29 @@ export const getTransactionStats = async (req, res) => {
         orderBy: { _count: { id: "desc" } },
         take: 10,
       }),
+
+      prisma.transaction.findMany({
+        where: whereClause,
+        select: {
+          createdAt: true,
+        },
+        orderBy: { createdAt: "asc" },
+      }),
     ]);
+
+    const dailyStatsMap = new Map();
+
+    allTransactions.forEach((transaction) => {
+      const dateKey = transaction.createdAt.toISOString().split("T")[0];
+
+      if (!dailyStatsMap.has(dateKey)) {
+        dailyStatsMap.set(dateKey, { date: dateKey, count: 0 });
+      }
+
+      dailyStatsMap.get(dateKey).count++;
+    });
+
+    const dailyStats = Array.from(dailyStatsMap.values());
 
     const topItemsWithDetails = await Promise.all(
       topItems.map(async (item) => {
@@ -146,11 +154,15 @@ export const getTransactionStats = async (req, res) => {
         count: stat._count.id,
         totalQuantity: Math.abs(stat._sum.quantity),
       })),
-      dailyVolume: dailyStats.map((stat) => ({
-        date: stat.createdAt,
-        count: stat._count.id,
-      })),
+      dailyVolume: dailyStats,
       topItems: topItemsWithDetails,
+      summary: {
+        totalTransactions: allTransactions.length,
+        dateRange: {
+          start: startDate || "all time",
+          end: endDate || "all time",
+        },
+      },
     });
   } catch (error) {
     console.error("Get transaction stats error:", error);

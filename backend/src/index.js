@@ -11,6 +11,7 @@ import itemRoutes from "./routes/item.route.js";
 import requisitionRoutes from "./routes/requisition.route.js";
 import serviceRequestRoutes from "./routes/serviceRequest.route.js";
 import dashboardRoutes from "./routes/dashboard.route.js";
+import transactionRoutes from "./routes/transactions.route.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -31,6 +32,7 @@ app.use("/api/items", authenticateToken, itemRoutes);
 app.use("/api/requisitions", authenticateToken, requisitionRoutes);
 app.use("/api/service-requests", authenticateToken, serviceRequestRoutes);
 app.use("/api/dashboard", authenticateToken, dashboardRoutes);
+app.use("/api/transactions", authenticateToken, transactionRoutes);
 
 app.use((error, req, res, next) => {
   console.error(error);
