@@ -15,8 +15,22 @@ router.use(authenticateToken);
 
 router.post("/", authorize("DEPARTMENT_HEAD"), createRequisition);
 
-router.get("/", getRequisitions);
-router.get("/stats", getRequisitionStats);
+router.get(
+  "/",
+  authorize(
+    "DEPARTMENT_HEAD",
+    "PROCUREMENT_OFFICER",
+    "STOREKEEPER",
+    "ADMIN",
+    "AUDITOR"
+  ),
+  getRequisitions
+);
+router.get(
+  "/stats",
+  authorize("PROCUREMENT_OFFICER", "STOREKEEPER", "ADMIN", "AUDITOR"),
+  getRequisitionStats
+);
 
 router.get("/:id", getRequisitionById);
 

@@ -14,9 +14,23 @@ router.use(authenticateToken);
 
 router.post("/", authorize("DEPARTMENT_HEAD"), createServiceRequest);
 
-router.get("/stats", getServiceRequestStats);
+router.get(
+  "/stats",
+  authorize("PROCUREMENT_OFFICER", "STOREKEEPER", "ADMIN", "AUDITOR"),
+  getServiceRequestStats
+);
 
-router.get("/", getServiceRequests);
+router.get(
+  "/",
+  authorize(
+    "DEPARTMENT_HEAD",
+    "PROCUREMENT_OFFICER",
+    "STOREKEEPER",
+    "ADMIN",
+    "AUDITOR"
+  ),
+  getServiceRequests
+);
 
 router.get("/:id", getServiceRequestById);
 
