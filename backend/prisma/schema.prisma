@@ -8,23 +8,118 @@ datasource db {
 }
 
 model User {
+  id                       Int              @id @default(autoincrement())
+  email                    String           @unique
+  password                 String
+  firstName                String
+  lastName                 String
+  role                     UserRole
+  departmentId             Int?
+  createdAt                DateTime         @default(now())
+  updatedAt                DateTime         @updatedAt
+  requisitions             Requisition[]
+  processedRequisitions    Requisition[]    @relation("ProcessedRequisitions")
+  serviceRequests          ServiceRequest[]
+  processedServiceRequests ServiceRequest[] @relation("ProcessedServiceRequests")
+  Transaction              Transaction[]
+  department               Department?      @relation(fields: [departmentId], references: [id])
+}
+
+model Department {
+  id              Int              @id @default(autoincrement())
+  name            String           @unique
+  description     String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  requisitions    Requisition[]
+  serviceRequests ServiceRequest[]
+  users           User[]
+}
+
+model Category {
   id          Int      @id @default(autoincrement())
-  email       String   @unique
-  password    String   
-  firstName   String
-  lastName    String
-  role        UserRole
-  department  Department? @relation(fields: [departmentId], references: [id])
-  departmentId Int?
+  name        String   @unique
+  description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  items       Item[]
+}
 
-  requisitions      Requisition[]
-  serviceRequests   ServiceRequest[]
-  processedRequisitions Requisition[] @relation("ProcessedRequisitions")
-  processedServiceRequests ServiceRequest[] @relation("ProcessedServiceRequests")
+model Item {
+  id           Int               @id @default(autoincrement())
+  name         String            @unique
+  description  String?
+  quantity     Int               @default(0)
+  minQuantity  Int               @default(0)
+  unit         String
+  categoryId   Int
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  category     Category          @relation(fields: [categoryId], references: [id])
+  requisitions RequisitionItem[]
+  transactions Transaction[]
+}
 
-  Transaction Transaction[]
+model Transaction {
+  id            Int             @id @default(autoincrement())
+  type          TransactionType
+  itemId        Int
+  quantity      Int
+  notes         String?
+  userId        Int
+  requisitionId Int?
+  createdAt     DateTime        @default(now())
+  item          Item            @relation(fields: [itemId], references: [id])
+  requisition   Requisition?    @relation(fields: [requisitionId], references: [id])
+  user          User            @relation(fields: [userId], references: [id])
+
+  @@index([itemId])
+  @@index([createdAt])
+}
+
+model Requisition {
+  id                 Int               @id @default(autoincrement())
+  title              String
+  description        String?
+  status             RequisitionStatus @default(PENDING)
+  createdById        Int
+  departmentId       Int
+  reasonForRejection String?
+  processedById      Int?
+  processedAt        DateTime?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  createdBy          User              @relation(fields: [createdById], references: [id])
+  department         Department        @relation(fields: [departmentId], references: [id])
+  processedBy        User?             @relation("ProcessedRequisitions", fields: [processedById], references: [id])
+  items              RequisitionItem[]
+  Transaction        Transaction[]
+}
+
+model RequisitionItem {
+  id            Int         @id @default(autoincrement())
+  requisitionId Int
+  itemId        Int
+  quantity      Int
+  item          Item        @relation(fields: [itemId], references: [id])
+  requisition   Requisition @relation(fields: [requisitionId], references: [id], onDelete: Cascade)
+}
+
+model ServiceRequest {
+  id                 Int               @id @default(autoincrement())
+  title              String
+  description        String
+  status             RequisitionStatus @default(PENDING)
+  createdById        Int
+  departmentId       Int
+  reasonForRejection String?
+  processedById      Int?
+  processedAt        DateTime?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  createdBy          User              @relation(fields: [createdById], references: [id])
+  department         Department        @relation(fields: [departmentId], references: [id])
+  processedBy        User?             @relation("ProcessedServiceRequests", fields: [processedById], references: [id])
 }
 
 enum UserRole {
@@ -32,114 +127,13 @@ enum UserRole {
   DEPARTMENT_HEAD
   PROCUREMENT_OFFICER
   ADMIN
-}
-
-model Department {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
-  description String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  users     User[]
-
-  requisitions Requisition[]
-  serviceRequests ServiceRequest[]
-}
-
-model Category {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
-  description String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  items     Item[]
-}
-
-model Item {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique
-  description String?
-  quantity    Int      @default(0)
-  minQuantity Int      @default(0) 
-  unit        String   
-  category    Category @relation(fields: [categoryId], references: [id])
-  categoryId  Int
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  transactions Transaction[]
-  requisitions RequisitionItem[]
-}
-
-model Transaction {
-  id          Int       @id @default(autoincrement())
-  type        TransactionType
-  item        Item      @relation(fields: [itemId], references: [id])
-  itemId      Int
-  quantity    Int       // +ve for RECEIVE, -ve for ISSUE
-  notes       String?
-  user        User      @relation(fields: [userId], references: [id]) // Who performed the action
-  userId      Int
-  requisition Requisition? @relation(fields: [requisitionId], references: [id]) // Links an ISSUE to an approved requisition
-  requisitionId Int?
-  createdAt   DateTime  @default(now())
-
-  @@index([itemId])
-  @@index([createdAt])
+  AUDITOR
 }
 
 enum TransactionType {
   RECEIVE
   ISSUE
   ADJUST
-}
-
-model Requisition {
-  id            Int         @id @default(autoincrement())
-  title         String
-  description   String?     
-  status        RequisitionStatus @default(PENDING)
-  createdBy     User        @relation(fields: [createdById], references: [id])
-  createdById   Int
-  department    Department  @relation(fields: [departmentId], references: [id])
-  departmentId  Int
-  items         RequisitionItem[] 
-  reasonForRejection String?
-  processedBy   User?       @relation("ProcessedRequisitions", fields: [processedById], references: [id]) // The Procurement Officer who approved/rejected
-  processedById Int?
-  processedAt   DateTime?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-
-  Transaction Transaction[]
-}
-
-model RequisitionItem {
-  id            Int       @id @default(autoincrement())
-  requisition   Requisition @relation(fields: [requisitionId], references: [id], onDelete: Cascade)
-  requisitionId Int
-  item          Item      @relation(fields: [itemId], references: [id])
-  itemId        Int
-  quantity      Int
-}
-
-model ServiceRequest {
-  id          Int      @id @default(autoincrement())
-  title       String   
-  description String   
-  status      RequisitionStatus @default(PENDING) 
-  createdBy   User     @relation(fields: [createdById], references: [id])
-  createdById Int
-  department  Department @relation(fields: [departmentId], references: [id])
-  departmentId Int
-  reasonForRejection String?
-  processedBy User?    @relation("ProcessedServiceRequests", fields: [processedById], references: [id])
-  processedById Int?
-  processedAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
 }
 
 enum RequisitionStatus {

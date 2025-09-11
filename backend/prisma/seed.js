@@ -15,6 +15,14 @@ async function main() {
       description: "Central administration and management department",
     },
   });
+  const auditDepartment = await prisma.department.upsert({
+    where: { name: "Audit" },
+    update: {},
+    create: {
+      name: "Audit",
+      description: "Central Audit and management department",
+    },
+  });
 
   const publicWorksDept = await prisma.department.upsert({
     where: { name: "Public Works" },
@@ -57,6 +65,20 @@ async function main() {
       lastName: "Administrator",
       role: "ADMIN",
       departmentId: adminDepartment.id,
+    },
+  });
+  const auditorPassword = await bcrypt.hash("auditor123", 12);
+
+  const auditorUser = await prisma.user.upsert({
+    where: { email: "auditor@city.gov" },
+    update: {},
+    create: {
+      email: "auditor@city.gov",
+      password: auditorPassword,
+      firstName: "System",
+      lastName: "Auditor",
+      role: "AUDITOR",
+      departmentId: auditDepartment.id,
     },
   });
 
