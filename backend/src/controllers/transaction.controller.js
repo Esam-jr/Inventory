@@ -1,5 +1,5 @@
 import prisma from "../lib/prisma.js";
-
+import { notificationTriggers } from "../services/notifications.service.js";
 export const getTransactions = async (req, res) => {
   const { type, itemId, startDate, endDate, page = 1, limit = 50 } = req.query;
 
@@ -272,7 +272,17 @@ export const adjustStock = async (req, res) => {
           },
         },
       });
-
+      if (updatedItem.quantity <= updatedItem.minQuantity) {
+        await notificationTriggers.onLowStock([
+          {
+            id: updatedItem.id,
+            name: updatedItem.name,
+            currentQuantity: updatedItem.quantity,
+            minQuantity: updatedItem.minQuantity,
+            unit: updatedItem.unit,
+          },
+        ]);
+      }
       return { transaction, updatedItem };
     });
 

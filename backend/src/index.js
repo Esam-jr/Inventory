@@ -13,6 +13,7 @@ import serviceRequestRoutes from "./routes/serviceRequest.route.js";
 import dashboardRoutes from "./routes/dashboard.route.js";
 import transactionRoutes from "./routes/transactions.route.js";
 import reportRoutes from "./routes/report.route.js";
+import { startScheduledTasks } from "./services/scheduler.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -27,7 +28,6 @@ app.get("/api/health", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
-
 app.use("/api/users", authenticateToken, userRoutes);
 app.use("/api/items", authenticateToken, itemRoutes);
 app.use("/api/requisitions", authenticateToken, requisitionRoutes);
@@ -44,3 +44,5 @@ app.use((error, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+startScheduledTasks();

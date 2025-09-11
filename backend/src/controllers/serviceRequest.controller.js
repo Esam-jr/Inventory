@@ -1,4 +1,5 @@
 import prisma from "../lib/prisma.js";
+import { notificationTriggers } from "../services/notifications.service.js";
 
 export const createServiceRequest = async (req, res) => {
   const { title, description } = req.body;
@@ -211,6 +212,9 @@ export const updateServiceRequestStatus = async (req, res) => {
         },
       },
     });
+    await notificationTriggers.onServiceRequestStatusChange(
+      updatedServiceRequest
+    );
 
     res.json({
       message: `Service request ${status.toLowerCase()} successfully`,

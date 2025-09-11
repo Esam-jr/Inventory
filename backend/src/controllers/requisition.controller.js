@@ -1,4 +1,5 @@
 import prisma from "../lib/prisma.js";
+import { notificationTriggers } from "../services/notifications.service.js";
 
 export const createRequisition = async (req, res) => {
   const { title, description, items } = req.body;
@@ -15,7 +16,6 @@ export const createRequisition = async (req, res) => {
       return res.status(400).json({ error: "One or more items not found" });
     }
 
-    // Create the requisition with items
     const requisition = await prisma.requisition.create({
       data: {
         title,
@@ -58,6 +58,7 @@ export const createRequisition = async (req, res) => {
         },
       },
     });
+    await notificationTriggers.onNewRequisition(requisition);
 
     res.status(201).json(requisition);
   } catch (error) {
@@ -274,6 +275,7 @@ export const updateRequisitionStatus = async (req, res) => {
         },
       },
     });
+    await notificationTriggers.onRequisitionStatusChange(updatedRequisition);
 
     res.json({
       message: `Requisition ${status.toLowerCase()} successfully`,
