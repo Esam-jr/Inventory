@@ -15,6 +15,7 @@ import Dashboard from "./pages/Dashboard/Dashboard";
 import ItemList from "./pages/Inventory/ItemList";
 import RequisitionList from "./pages/Requisitions/RequisitionList";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import LoadingSpinner from "./components/ui/LoadingSpinner";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,7 +37,7 @@ function AppContent() {
         alignItems="center"
         minHeight="100vh"
       >
-        <div>Loading...</div>
+        <LoadingSpinner message="Initializing application..." />
       </Box>
     );
   }
