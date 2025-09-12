@@ -14,6 +14,7 @@ import dashboardRoutes from "./routes/dashboard.route.js";
 import transactionRoutes from "./routes/transactions.route.js";
 import reportRoutes from "./routes/report.route.js";
 import { startScheduledTasks } from "./services/scheduler.js";
+import healthRoutes from "./routes/health.route.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -35,6 +36,7 @@ app.use("/api/service-requests", authenticateToken, serviceRequestRoutes);
 app.use("/api/dashboard", authenticateToken, dashboardRoutes);
 app.use("/api/transactions", authenticateToken, transactionRoutes);
 app.use("/api/reports", authenticateToken, reportRoutes);
+app.use("/api/health", healthRoutes);
 
 app.use((error, req, res, next) => {
   console.error(error);
