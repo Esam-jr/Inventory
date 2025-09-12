@@ -17,6 +17,9 @@ import RequisitionList from "./pages/Requisitions/RequisitionList";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import LoadingSpinner from "./components/ui/LoadingSpinner";
 import ErrorBoundary from "./components/ui/ErrorBoundary";
+import ItemList from "./pages/Inventory/ItemList";
+import ItemForm from "./pages/Inventory/ItemForm";
+import InventoryStats from "./pages/Inventory/InventoryStats";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -60,6 +63,12 @@ function AppContent() {
                 <Routes>
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/inventory" element={<ItemList />} />
+                  <Route path="/inventory/new" element={<ItemForm />} />
+                  <Route
+                    path="/inventory/edit/:id"
+                    element={<ItemForm editMode />}
+                  />
+                  <Route path="/inventory/stats" element={<InventoryStats />} />
                   <Route path="/requisitions" element={<RequisitionList />} />
                   <Route path="/" element={<Navigate to="/dashboard" />} />
                   <Route path="*" element={<div>Page not found</div>} />
