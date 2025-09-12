@@ -16,6 +16,7 @@ import ItemList from "./pages/Inventory/ItemList";
 import RequisitionList from "./pages/Requisitions/RequisitionList";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import LoadingSpinner from "./components/ui/LoadingSpinner";
+import ErrorBoundary from "./components/ui/ErrorBoundary";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -78,7 +79,9 @@ function App() {
       <AppThemeProvider>
         <AuthProvider>
           <CssBaseline />
-          <AppContent />
+          <ErrorBoundary>
+            <AppContent />
+          </ErrorBoundary>
           <ReactQueryDevtools initialIsOpen={false} />
         </AuthProvider>
       </AppThemeProvider>
