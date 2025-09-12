@@ -20,6 +20,12 @@ import ErrorBoundary from "./components/ui/ErrorBoundary";
 import ItemList from "./pages/Inventory/ItemList";
 import ItemForm from "./pages/Inventory/ItemForm";
 import InventoryStats from "./pages/Inventory/InventoryStats";
+import RequisitionList from "./pages/Requisitions/RequisitionList";
+import RequisitionForm from "./pages/Requisitions/RequisitionForm";
+import RequisitionDetail from "./pages/Requisitions/RequisitionDetail";
+import ReportBuilder from "./pages/Reports/ReportBuilder";
+import ReportView from "./pages/Reports/ReportView";
+import Profile from "./pages/Profile/Profile";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -70,6 +76,21 @@ function AppContent() {
                   />
                   <Route path="/inventory/stats" element={<InventoryStats />} />
                   <Route path="/requisitions" element={<RequisitionList />} />
+                  <Route
+                    path="/requisitions/new"
+                    element={<RequisitionForm />}
+                  />
+                  <Route
+                    path="/requisitions/edit/:id"
+                    element={<RequisitionForm editMode />}
+                  />
+                  <Route
+                    path="/requisitions/:id"
+                    element={<RequisitionDetail />}
+                  />
+                  <Route path="/reports" element={<ReportBuilder />} />
+                  <Route path="/reports/:id" element={<ReportView />} />
+                  <Route path="/profile" element={<Profile />} />
                   <Route path="/" element={<Navigate to="/dashboard" />} />
                   <Route path="*" element={<div>Page not found</div>} />
                 </Routes>
