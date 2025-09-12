@@ -17,6 +17,7 @@ export const getHealthStatus = async (req, res) => {
       healthCheck.services.database = {
         status: "healthy",
         timestamp: new Date().toISOString(),
+        provider: "PostgreSQL",
       };
     } catch (dbError) {
       healthCheck.status = "degraded";
@@ -26,26 +27,6 @@ export const getHealthStatus = async (req, res) => {
         timestamp: new Date().toISOString(),
       };
     }
-
-    healthCheck.memory = {
-      rss: `${Math.round(process.memoryUsage().rss / 1024 / 1024)} MB`,
-      heapTotal: `${Math.round(
-        process.memoryUsage().heapTotal / 1024 / 1024
-      )} MB`,
-      heapUsed: `${Math.round(
-        process.memoryUsage().heapUsed / 1024 / 1024
-      )} MB`,
-      external: `${Math.round(
-        process.memoryUsage().external / 1024 / 1024
-      )} MB`,
-    };
-
-    healthCheck.system = {
-      platform: process.platform,
-      architecture: process.arch,
-      nodeVersion: process.version,
-      cpuUsage: process.cpuUsage(),
-    };
 
     res.json(healthCheck);
   } catch (error) {
@@ -58,75 +39,49 @@ export const getHealthStatus = async (req, res) => {
   }
 };
 
-// Detailed system diagnostics
-export const getSystemDiagnostics = async (req, res) => {
+// Service status overview
+export const getServiceStatus = async (req, res) => {
   try {
-    const diagnostics = {
+    const status = {
       timestamp: new Date().toISOString(),
-      database: {},
-      application: {},
-      statistics: {},
+      services: {
+        database: "unknown",
+        api: "healthy",
+        authentication: "healthy",
+        email: process.env.SMTP_USER ? "configured" : "not_configured",
+      },
     };
 
     try {
-      const [userCount, itemCount, requisitionCount, transactionCount] =
-        await Promise.all([
-          prisma.user.count(),
-          prisma.item.count(),
-          prisma.requisition.count(),
-          prisma.transaction.count(),
-        ]);
+      await Promise.race([
+        prisma.$queryRaw`SELECT 1`,
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Database timeout")), 5000)
+        ),
+      ]);
 
-      diagnostics.database = {
-        status: "connected",
-        statistics: {
-          users: userCount,
-          items: itemCount,
-          requisitions: requisitionCount,
-          transactions: transactionCount,
-        },
-      };
+      status.services.database = "healthy";
     } catch (dbError) {
-      diagnostics.database = {
-        status: "disconnected",
-        error: dbError.message,
-      };
+      status.services.database = "unhealthy";
+      console.error("Database health check failed:", dbError.message);
     }
 
-    diagnostics.application = {
-      uptime: process.uptime(),
-      memory: {
-        rss: process.memoryUsage().rss,
-        heapTotal: process.memoryUsage().heapTotal,
-        heapUsed: process.memoryUsage().heapUsed,
-        external: process.memoryUsage().external,
-      },
-      cpu: process.cpuUsage(),
-      environment: process.env.NODE_ENV || "development",
-    };
-
-    diagnostics.system = {
-      platform: process.platform,
-      arch: process.arch,
-      nodeVersion: process.version,
-      pid: process.pid,
-    };
-
-    res.json(diagnostics);
+    res.json(status);
   } catch (error) {
     res.status(500).json({
-      error: "Diagnostics failed",
+      error: "Service status check failed",
       timestamp: new Date().toISOString(),
       details: error.message,
     });
   }
 };
 
-// Database connection test
 export const testDatabaseConnection = async (req, res) => {
   try {
     const startTime = Date.now();
+
     await prisma.$queryRaw`SELECT 1`;
+
     const responseTime = Date.now() - startTime;
 
     res.json({
@@ -149,54 +104,10 @@ export const testDatabaseConnection = async (req, res) => {
   }
 };
 
-// Service status overview
-export const getServiceStatus = async (req, res) => {
-  try {
-    const status = {
-      timestamp: new Date().toISOString(),
-      services: {
-        database: "unknown",
-        api: "healthy",
-        authentication: "healthy",
-        email: process.env.SMTP_USER ? "configured" : "not_configured",
-      },
-      metrics: {},
-    };
-
-    try {
-      await prisma.$queryRaw`SELECT 1`;
-      status.services.database = "healthy";
-
-      const [activeUsers, recentTransactions] = await Promise.all([
-        prisma.user.count({
-          where: {
-            lastLogin: {
-              gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days
-            },
-          },
-        }),
-        prisma.transaction.count({
-          where: {
-            createdAt: {
-              gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // Last 24 hours
-            },
-          },
-        }),
-      ]);
-
-      status.metrics = {
-        activeUsersLast7Days: activeUsers,
-        transactionsLast24Hours: recentTransactions,
-      };
-    } catch (dbError) {
-      status.services.database = "unhealthy";
-    }
-
-    res.json(status);
-  } catch (error) {
-    res.status(500).json({
-      error: "Service status check failed",
-      timestamp: new Date().toISOString(),
-    });
-  }
+export const getSystemDiagnostics = async (req, res) => {
+  res.json({
+    timestamp: new Date().toISOString(),
+    message: "Diagnostics endpoint is temporarily disabled",
+    status: "info",
+  });
 };
