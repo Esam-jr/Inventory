@@ -200,3 +200,34 @@ export const useDeleteUser = () => {
     },
   });
 };
+
+//Department Queries and Mutations (admin only)
+export const useDepartments = () => {
+  const queryClient = useQueryClient();
+  return useQuery({
+    queryKey: ["departments"],
+    queryFn: async () => {
+      const response = await api.get("/departments");
+      return response.data;
+    },
+    refetchInterval: 300000,
+  });
+};
+export const useCreateDepartment = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (departmentData) => api.post("/departments", departmentData),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["departments"]);
+    },
+  });
+};
+export const useDeleteDepartment = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (departmentId) => api.delete(`/departments/${departmentId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["departments"]);
+    },
+  });
+};
