@@ -70,3 +70,17 @@ export const updateItem = async (req, res) => {
     res.status(500).json({ error: "Failed to update item" });
   }
 };
+export const deleteItem = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    await prisma.item.delete({
+      where: { id: parseInt(id) },
+    });
+
+    res.status(204).end();
+  } catch (error) {
+    console.error("Error deleting item:", error);
+    res.status(500).json({ error: "Failed to delete item" });
+  }
+};

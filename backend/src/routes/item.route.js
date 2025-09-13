@@ -3,6 +3,7 @@ import {
   getItems,
   createItem,
   updateItem,
+  deleteItem,
 } from "../controllers/item.controller.js";
 import { authorize } from "../middleware/auth.js";
 const router = Router();
@@ -21,5 +22,6 @@ router.get(
 
 router.post("/", authorize("ADMIN", "STOREKEEPER"), createItem);
 router.put("/:id", authorize("ADMIN", "STOREKEEPER"), updateItem);
+router.delete("/", authorize("ADMIN", "STOREKEEPER"), deleteItem);
 
 export default router;
