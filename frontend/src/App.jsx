@@ -12,8 +12,7 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Layout from "./components/layout/Layout";
 import LoginForm from "./components/auth/LoginForm";
 import Dashboard from "./pages/Dashboard/Dashboard";
-import ItemList from "./pages/Inventory/ItemList";
-import RequisitionList from "./pages/Requisitions/RequisitionList";
+
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import LoadingSpinner from "./components/ui/LoadingSpinner";
 import ErrorBoundary from "./components/ui/ErrorBoundary";
@@ -66,34 +65,39 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <Layout>
-                <Routes>
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/inventory" element={<ItemList />} />
-                  <Route path="/inventory/new" element={<ItemForm />} />
-                  <Route
-                    path="/inventory/edit/:id"
-                    element={<ItemForm editMode />}
-                  />
-                  <Route path="/inventory/stats" element={<InventoryStats />} />
-                  <Route path="/requisitions" element={<RequisitionList />} />
-                  <Route
-                    path="/requisitions/new"
-                    element={<RequisitionForm />}
-                  />
-                  <Route
-                    path="/requisitions/edit/:id"
-                    element={<RequisitionForm editMode />}
-                  />
-                  <Route
-                    path="/requisitions/:id"
-                    element={<RequisitionDetail />}
-                  />
-                  <Route path="/reports" element={<ReportBuilder />} />
-                  <Route path="/reports/:id" element={<ReportView />} />
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/" element={<Navigate to="/dashboard" />} />
-                  <Route path="*" element={<div>Page not found</div>} />
-                </Routes>
+                <ErrorBoundary>
+                  <Routes>
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/inventory" element={<ItemList />} />
+                    <Route path="/inventory/new" element={<ItemForm />} />
+                    <Route
+                      path="/inventory/edit/:id"
+                      element={<ItemForm editMode />}
+                    />
+                    <Route
+                      path="/inventory/stats"
+                      element={<InventoryStats />}
+                    />
+                    <Route path="/requisitions" element={<RequisitionList />} />
+                    <Route
+                      path="/requisitions/new"
+                      element={<RequisitionForm />}
+                    />
+                    <Route
+                      path="/requisitions/edit/:id"
+                      element={<RequisitionForm editMode />}
+                    />
+                    <Route
+                      path="/requisitions/:id"
+                      element={<RequisitionDetail />}
+                    />
+                    <Route path="/reports" element={<ReportBuilder />} />
+                    <Route path="/reports/:id" element={<ReportView />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/" element={<Navigate to="/dashboard" />} />
+                    <Route path="*" element={<div>Page not found</div>} />
+                  </Routes>
+                </ErrorBoundary>
               </Layout>
             </ProtectedRoute>
           }
@@ -109,9 +113,7 @@ function App() {
       <AppThemeProvider>
         <AuthProvider>
           <CssBaseline />
-          <ErrorBoundary>
-            <AppContent />
-          </ErrorBoundary>
+          <AppContent />
           <ReactQueryDevtools initialIsOpen={false} />
         </AuthProvider>
       </AppThemeProvider>
