@@ -19,7 +19,7 @@ const ConfirmDialog = ({
   message = "Are you sure you want to perform this action?",
   confirmText = "Confirm",
   cancelText = "Cancel",
-  severity = "info", // 'info', 'warning', 'error', 'success'
+  severity = "info",
   loading = false,
   maxWidth = "sm",
 }) => {
@@ -37,7 +37,9 @@ const ConfirmDialog = ({
   };
 
   const handleConfirm = () => {
-    onConfirm();
+    if (!loading) {
+      onConfirm();
+    }
   };
 
   const handleClose = () => {
@@ -90,7 +92,7 @@ const ConfirmDialog = ({
           color={getSeverityColor()}
           sx={{ minWidth: 80 }}
         >
-          {confirmText}
+          {loading ? "Deleting..." : confirmText}{" "}
         </Button>
       </DialogActions>
     </Dialog>

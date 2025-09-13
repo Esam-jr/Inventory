@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "./api";
 
-// Items queries
 export const useItems = (params = {}) => {
   return useQuery({
     queryKey: ["items", params],
@@ -12,6 +11,15 @@ export const useItems = (params = {}) => {
   });
 };
 
+export const useDeleteItem = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (itemId) => api.delete(`/items/${itemId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["items"]);
+    },
+  });
+};
 export const useCreateItem = () => {
   const queryClient = useQueryClient();
   return useMutation({

@@ -1,40 +1,30 @@
 import { useState } from "react";
 
 const useConfirmDialog = () => {
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogConfig, setDialogConfig] = useState({});
+  const [isOpen, setIsOpen] = useState(false);
+  const [config, setConfig] = useState({});
 
-  const openDialog = (config) => {
-    setDialogConfig(config);
-    setDialogOpen(true);
+  const openDialog = (dialogConfig) => {
+    setConfig(dialogConfig);
+    setIsOpen(true);
   };
 
   const closeDialog = () => {
-    setDialogOpen(false);
-    setDialogConfig({});
+    setIsOpen(false);
+    setConfig({});
   };
 
-  const ConfirmDialogComponent = () => (
-    <ConfirmDialog
-      open={dialogOpen}
-      onClose={closeDialog}
-      onConfirm={() => {
-        dialogConfig.onConfirm?.();
-        closeDialog();
-      }}
-      title={dialogConfig.title}
-      message={dialogConfig.message}
-      confirmText={dialogConfig.confirmText}
-      cancelText={dialogConfig.cancelText}
-      severity={dialogConfig.severity}
-      loading={dialogConfig.loading}
-    />
-  );
+  const handleConfirm = () => {
+    config.onConfirm?.();
+    closeDialog();
+  };
 
   return {
+    isOpen,
+    config,
     openDialog,
     closeDialog,
-    ConfirmDialogComponent,
+    handleConfirm,
   };
 };
 

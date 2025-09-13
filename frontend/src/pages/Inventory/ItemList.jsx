@@ -13,6 +13,7 @@ import {
   FormControl,
   InputLabel,
   Select,
+  Snackbar,
 } from "@mui/material";
 import {
   Add as AddIcon,
@@ -24,19 +25,27 @@ import {
   Visibility as ViewIcon,
 } from "@mui/icons-material";
 import { DataGrid } from "@mui/x-data-grid";
-import { useItems } from "../../services/queries";
+import { useItems, useDeleteItem } from "../../services/queries";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import useConfirmDialog from "../../hooks/useConfirmDialog";
 import { useAuth } from "../../contexts/AuthContext";
+import { Alert } from "@mui/material";
 
 const ItemList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [filterAnchorEl, setFilterAnchorEl] = useState(null);
+  const [notification, setNotification] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
   const { user } = useAuth();
-  const { openDialog, ConfirmDialogComponent } = useConfirmDialog();
+  const { isOpen, config, openDialog, closeDialog, handleConfirm } =
+    useConfirmDialog();
 
   const {
     data: items,
@@ -48,17 +57,37 @@ const ItemList = () => {
     status: statusFilter !== "all" ? statusFilter : undefined,
   });
 
+  const deleteItemMutation = useDeleteItem();
+
   const handleDeleteItem = (item) => {
     openDialog({
       title: "Delete Item",
       message: `Are you sure you want to delete "${item.name}"? This action cannot be undone.`,
       severity: "error",
       confirmText: "Delete",
-      onConfirm: () => {
-        console.log("Deleting item:", item.id);
-        // Implement delete functionality
+      onConfirm: async () => {
+        try {
+          await deleteItemMutation.mutateAsync(item.id);
+          setNotification({
+            open: true,
+            message: `"${item.name}" has been deleted successfully.`,
+            severity: "success",
+          });
+        } catch (error) {
+          setNotification({
+            open: true,
+            message: `Failed to delete "${item.name}": ${
+              error.response?.data?.error || error.message
+            }`,
+            severity: "error",
+          });
+        }
       },
     });
+  };
+
+  const handleCloseNotification = () => {
+    setNotification({ ...notification, open: false });
   };
 
   const columns = [
@@ -146,6 +175,7 @@ const ItemList = () => {
                 size="small"
                 color="secondary"
                 onClick={() => console.log("Edit item:", params.row.id)}
+                disabled={deleteItemMutation.isLoading}
               >
                 <EditIcon />
               </IconButton>
@@ -153,6 +183,7 @@ const ItemList = () => {
                 size="small"
                 color="error"
                 onClick={() => handleDeleteItem(params.row)}
+                disabled={deleteItemMutation.isLoading}
               >
                 <DeleteIcon />
               </IconButton>
@@ -168,7 +199,32 @@ const ItemList = () => {
 
   return (
     <Box>
-      <ConfirmDialogComponent />
+      <ConfirmDialog
+        open={isOpen}
+        onClose={closeDialog}
+        onConfirm={handleConfirm}
+        title={config.title}
+        message={config.message}
+        confirmText={config.confirmText}
+        cancelText={config.cancelText}
+        severity={config.severity}
+        loading={deleteItemMutation.isLoading}
+      />
+
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={6000}
+        onClose={handleCloseNotification}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert
+          onClose={handleCloseNotification}
+          severity={notification.severity}
+          variant="filled"
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
 
       {/* Header */}
       <Box
@@ -187,6 +243,7 @@ const ItemList = () => {
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => console.log("Add new item")}
+            disabled={deleteItemMutation.isLoading}
           >
             Add New Item
           </Button>
@@ -208,12 +265,14 @@ const ItemList = () => {
               ),
             }}
             sx={{ minWidth: 250 }}
+            disabled={deleteItemMutation.isLoading}
           />
 
           <Button
             variant="outlined"
             startIcon={<FilterIcon />}
             onClick={(e) => setFilterAnchorEl(e.currentTarget)}
+            disabled={deleteItemMutation.isLoading}
           >
             Filters
           </Button>
@@ -263,6 +322,7 @@ const ItemList = () => {
                 setCategoryFilter("all");
                 setStatusFilter("all");
               }}
+              disabled={deleteItemMutation.isLoading}
             >
               Clear Filters
             </Button>
@@ -309,11 +369,15 @@ const ItemList = () => {
           rowsPerPageOptions={[10, 25, 50]}
           checkboxSelection={false}
           disableSelectionOnClick
-          loading={isLoading}
+          loading={isLoading || deleteItemMutation.isLoading}
           sx={{
             border: 0,
             "& .MuiDataGrid-columnHeaders": {
               backgroundColor: "background.default",
+            },
+            "& .MuiDataGrid-cell": {
+              borderBottom: "1px solid",
+              borderColor: "divider",
             },
           }}
         />
