@@ -25,6 +25,7 @@ import RequisitionDetail from "./pages/Requisitions/RequisitionDetail";
 import ReportBuilder from "./pages/Reports/ReportBuilder";
 import ReportView from "./pages/Reports/ReportView";
 import Profile from "./pages/Profile/Profile";
+import UserManagment from "./pages/Userss/UserManagment";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -91,6 +92,7 @@ function AppContent() {
                       path="/requisitions/:id"
                       element={<RequisitionDetail />}
                     />
+                    <Route path="/users" element={<UserManagment />} />
                     <Route path="/reports" element={<ReportBuilder />} />
                     <Route path="/reports/:id" element={<ReportView />} />
                     <Route path="/profile" element={<Profile />} />
