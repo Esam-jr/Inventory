@@ -142,7 +142,7 @@ const AdminDashboard = () => {
         <Grow in timeout={700}>
           <Box>
             <StatCard
-              title="Inventory Items"
+              title="Inventory"
               value={stats?.totalItems || 0}
               icon={<InventoryIcon fontSize="inherit" />}
               color="secondary"
@@ -162,7 +162,7 @@ const AdminDashboard = () => {
         <Grow in timeout={1100}>
           <Box>
             <StatCard
-              title="Low Stock Items"
+              title="Low Stock"
               value={lowStockItems?.length || 0}
               icon={<WarningIcon fontSize="inherit" />}
               color="error"
