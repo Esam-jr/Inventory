@@ -19,6 +19,7 @@ import {
   People as UserIcon,
   Settings as SettingsIcon,
   History as TransactionIcon,
+  HomeWork as HomeWorkIcon,
 } from "@mui/icons-material";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -34,6 +35,12 @@ const menuItems = [
       "DEPARTMENT_HEAD",
       "AUDITOR",
     ],
+  },
+  {
+    text: "User Management",
+    icon: <UserIcon />,
+    path: "/users",
+    roles: ["ADMIN"],
   },
   {
     text: "Inventory",
@@ -65,12 +72,6 @@ const menuItems = [
     path: "/reports",
     roles: ["ADMIN", "PROCUREMENT_OFFICER", "AUDITOR"],
   },
-  {
-    text: "User Management",
-    icon: <UserIcon />,
-    path: "/users",
-    roles: ["ADMIN"],
-  },
 ];
 
 const Sidebar = ({ open, onClose, isMobile, userRole }) => {
@@ -93,22 +94,29 @@ const Sidebar = ({ open, onClose, isMobile, userRole }) => {
 
   const drawerContent = (
     <Box sx={{ width: drawerWidth }}>
-      <Box sx={{ p: 2, textAlign: "left" }}>
-        <Typography
-          variant="h6"
-          sx={{
-            fontWeight: 600,
-            background: "linear-gradient(45deg, #1976d2 30%, #21CBF3 90%)",
-            backgroundClip: "text",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-          }}
-        >
-          City Inventory
-        </Typography>
-        <Typography variant="body2" color="textSecondary">
-          Management System
-        </Typography>
+      <Box sx={{ p: 1, textAlign: "left" }}>
+        <Box sx={{ display: "flex", gap: 1.5 }}>
+          <HomeWorkIcon
+            sx={{ fontSize: 40, color: theme.palette.primary.main }}
+          />
+          <Box>
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: 600,
+                background: "linear-gradient(45deg, #1976d2 30%, #21CBF3 90%)",
+                backgroundClip: "text",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+              }}
+            >
+              Inventory
+            </Typography>
+            <Typography variant="body2" color="textSecondary">
+              Management System
+            </Typography>
+          </Box>
+        </Box>
       </Box>
 
       <Divider />
@@ -149,28 +157,6 @@ const Sidebar = ({ open, onClose, isMobile, userRole }) => {
           );
         })}
       </List>
-
-      <Divider sx={{ my: 2 }} />
-
-      <List sx={{ px: 1 }}>
-        <ListItem disablePadding>
-          <ListItemButton
-            onClick={() => handleNavigation("/settings")}
-            sx={{ borderRadius: 2 }}
-          >
-            <ListItemIcon sx={{ minWidth: 40 }}>
-              <SettingsIcon />
-            </ListItemIcon>
-            <ListItemText primary="Settings" />
-          </ListItemButton>
-        </ListItem>
-      </List>
-
-      <Box sx={{ p: 2, mt: "auto" }}>
-        <Typography variant="caption" color="textSecondary" display="block">
-          v{import.meta.env.VITE_APP_VERSION}
-        </Typography>
-      </Box>
     </Box>
   );
 

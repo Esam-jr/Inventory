@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Grid,
   Paper,
@@ -11,10 +10,9 @@ import {
   ListItem,
   ListItemText,
   Chip,
-  Divider,
   Alert,
   Grow,
-  CircularProgress,
+  useTheme,
 } from "@mui/material";
 
 import {
@@ -24,7 +22,6 @@ import {
   Assessment as ReportIcon,
   TrendingUp as TrendingIcon,
   Warning as WarningIcon,
-  History as HistoryIcon,
   CheckCircle,
 } from "@mui/icons-material";
 import { useDashboardStats, useItems } from "../../services/queries";
@@ -32,7 +29,7 @@ import LoadingSpinner from "../../components/ui/LoadingSpinner";
 
 const AdminDashboard = () => {
   const { data: stats, isLoading, error } = useDashboardStats();
-  const { data: items } = useItems(); // Get items for low stock calculation
+  const { data: items } = useItems();
 
   if (isLoading) return <LoadingSpinner />;
   if (error)
@@ -46,25 +43,70 @@ const AdminDashboard = () => {
     items?.filter((item) => item.quantity <= item.minQuantity) || [];
   const recentActivity = stats?.recentActivity || [];
 
-  const StatCard = ({ title, value, icon, color = "primary" }) => (
-    <Card>
-      <CardContent>
-        <Box display="flex" alignItems="center" justifyContent="space-between">
+  const StatCard = ({ title, value, icon, color = "primary" }) => {
+    const theme = useTheme();
+
+    return (
+      <Card
+        elevation={3}
+        sx={{
+          borderRadius: 3,
+          overflow: "hidden",
+          transition: "all 0.3s ease",
+          "&:hover": {
+            transform: "translateY(-4px)",
+            boxShadow: "0 8px 20px rgba(0,0,0,0.12)",
+          },
+        }}
+      >
+        <CardContent
+          sx={{
+            p: 3,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 2,
+          }}
+        >
           <Box>
-            <Typography color="textSecondary" gutterBottom variant="overline">
+            <Typography
+              variant="overline"
+              sx={{
+                fontWeight: 600,
+                letterSpacing: 1,
+                color: theme.palette.text.secondary,
+              }}
+            >
               {title}
             </Typography>
-            <Typography variant="h4" component="div">
+            <Typography
+              variant="h4"
+              component="div"
+              sx={{ fontWeight: 700, mt: 0.5 }}
+            >
               {value}
             </Typography>
           </Box>
-          <Box color={`${color}.main`} fontSize="2.5rem">
+
+          <Box
+            sx={{
+              bgcolor: `${color}.light`,
+              color: theme.palette[color].main,
+              borderRadius: "50%",
+              width: 56,
+              height: 56,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "2rem",
+            }}
+          >
             {icon}
           </Box>
-        </Box>
-      </CardContent>
-    </Card>
-  );
+        </CardContent>
+      </Card>
+    );
+  };
 
   const QuickAction = ({ title, description, icon, action }) => (
     <Paper sx={{ p: 2, height: "100%" }}>
@@ -158,14 +200,7 @@ const AdminDashboard = () => {
                   action={() => console.log("Navigate to reports")}
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
-                <QuickAction
-                  title="Inventory Overview"
-                  description="View and manage inventory items"
-                  icon={<InventoryIcon />}
-                  action={() => console.log("Navigate to inventory")}
-                />
-              </Grid>
+
               <Grid item xs={12} sm={6}>
                 <QuickAction
                   title="System Settings"
@@ -179,97 +214,99 @@ const AdminDashboard = () => {
         </Grid>
 
         {/* Recent Activity */}
-        <Grid item xs={12} md={4}>
-          <Paper sx={{ p: 3 }}>
+        <Grid sx={{ display: "flex", gap: 1.5 }}>
+          <Grid item xs={12} md={4}>
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Recent Activity
+              </Typography>
+              <List dense>
+                {recentActivity.slice(0, 5).map((activity, index) => (
+                  <ListItem
+                    key={index}
+                    divider={index < recentActivity.length - 1}
+                  >
+                    <ListItemText
+                      primary={activity.title || "Unknown Activity"}
+                      secondary={
+                        <Box>
+                          <Typography variant="caption" display="block">
+                            By: {activity.createdBy || "Unknown User"}
+                          </Typography>
+                          <Typography variant="caption" display="block">
+                            {activity.createdAt
+                              ? new Date(
+                                  activity.createdAt
+                                ).toLocaleDateString()
+                              : "Unknown date"}
+                          </Typography>
+                        </Box>
+                      }
+                    />
+                  </ListItem>
+                ))}
+                {recentActivity.length === 0 && (
+                  <ListItem>
+                    <ListItemText
+                      primary="No recent activity"
+                      secondary="Activity will appear here as users interact with the system"
+                    />
+                  </ListItem>
+                )}
+              </List>
+            </Paper>
+          </Grid>
+          <Paper sx={{ p: 3, mt: 3 }}>
             <Typography variant="h6" gutterBottom>
-              Recent Activity
+              System Status
             </Typography>
-            <List dense>
-              {recentActivity.slice(0, 5).map((activity, index) => (
-                <ListItem
-                  key={index}
-                  divider={index < recentActivity.length - 1}
-                >
-                  <ListItemText
-                    primary={activity.title || "Unknown Activity"}
-                    secondary={
-                      <Box>
-                        <Typography variant="caption" display="block">
-                          By: {activity.createdBy || "Unknown User"}
-                        </Typography>
-                        <Typography variant="caption" display="block">
-                          {activity.createdAt
-                            ? new Date(activity.createdAt).toLocaleDateString()
-                            : "Unknown date"}
-                        </Typography>
-                      </Box>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6} md={3}>
+                <Box textAlign="center">
+                  <Chip
+                    label="Online"
+                    color="success"
+                    icon={!isLoading ? <CheckCircle size={16} /> : undefined}
+                  />
+                  <Typography variant="body2">API Status</Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <Box textAlign="center">
+                  <Chip
+                    label="Connected"
+                    color="success"
+                    icon={!isLoading ? <CheckCircle size={16} /> : undefined}
+                  />
+                  <Typography variant="body2">Database</Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <Box textAlign="center">
+                  <Chip
+                    label={
+                      lowStockItems.length > 0 ? "Attention Needed" : "Healthy"
                     }
+                    color={lowStockItems.length > 0 ? "warning" : "success"}
+                    icon={!isLoading ? <CheckCircle size={16} /> : undefined}
                   />
-                </ListItem>
-              ))}
-              {recentActivity.length === 0 && (
-                <ListItem>
-                  <ListItemText
-                    primary="No recent activity"
-                    secondary="Activity will appear here as users interact with the system"
+                  <Typography variant="body2">Inventory Health</Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <Box textAlign="center">
+                  <Chip
+                    label="Operational"
+                    color="success"
+                    icon={!isLoading ? <CheckCircle size={16} /> : undefined}
                   />
-                </ListItem>
-              )}
-            </List>
+                  <Typography variant="body2">System Status</Typography>
+                </Box>
+              </Grid>
+            </Grid>
           </Paper>
         </Grid>
       </Grid>
-
-      {/* System Status */}
-      <Paper sx={{ p: 3, mt: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          System Status
-        </Typography>
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6} md={3}>
-            <Box textAlign="center">
-              <Chip
-                label="Online"
-                color="success"
-                icon={!isLoading ? <CheckCircle size={16} /> : undefined}
-              />
-              <Typography variant="body2">API Status</Typography>
-            </Box>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Box textAlign="center">
-              <Chip
-                label="Connected"
-                color="success"
-                icon={!isLoading ? <CheckCircle size={16} /> : undefined}
-              />
-              <Typography variant="body2">Database</Typography>
-            </Box>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Box textAlign="center">
-              <Chip
-                label={
-                  lowStockItems.length > 0 ? "Attention Needed" : "Healthy"
-                }
-                color={lowStockItems.length > 0 ? "warning" : "success"}
-                icon={!isLoading ? <CheckCircle size={16} /> : undefined}
-              />
-              <Typography variant="body2">Inventory Health</Typography>
-            </Box>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Box textAlign="center">
-              <Chip
-                label="Operational"
-                color="success"
-                icon={!isLoading ? <CheckCircle size={16} /> : undefined}
-              />
-              <Typography variant="body2">System Status</Typography>
-            </Box>
-          </Grid>
-        </Grid>
-      </Paper>
 
       {lowStockItems.length > 0 && (
         <Paper sx={{ p: 3, mt: 3, backgroundColor: "warning.light" }}>

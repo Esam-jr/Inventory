@@ -95,7 +95,6 @@ const Header = ({ onMenuClick }) => {
 
         {/* Right side controls */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          {/* Theme toggle */}
           <IconButton color="inherit" onClick={toggleColorMode}>
             {mode === "dark" ? <Brightness7 /> : <Brightness4 />}
           </IconButton>
