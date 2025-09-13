@@ -16,6 +16,7 @@ import transactionRoutes from "./routes/transactions.route.js";
 import reportRoutes from "./routes/report.route.js";
 import { startScheduledTasks } from "./services/scheduler.js";
 import healthRoutes from "./routes/health.route.js";
+import departmentRoute from "./routes/department.route.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -56,10 +57,9 @@ const limiter = rateLimit({
 
 app.use(limiter);
 
-// More aggressive rate limiting for auth endpoints
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 attempts per window
+  max: 5,
   message: {
     error: "Too many login attempts, please try again later.",
   },
@@ -74,6 +74,7 @@ app.use("/api/service-requests", authenticateToken, serviceRequestRoutes);
 app.use("/api/dashboard", authenticateToken, dashboardRoutes);
 app.use("/api/transactions", authenticateToken, transactionRoutes);
 app.use("/api/reports", authenticateToken, reportRoutes);
+app.use("/api/departments", authenticateToken, departmentRoute);
 app.use("/api/health", healthRoutes);
 
 app.use((req, res) => {
