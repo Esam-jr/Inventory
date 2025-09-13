@@ -78,6 +78,11 @@ const LoginForm = () => {
       password: "dept123",
       role: "Department Head",
     },
+    {
+      email: "auditor@city.gov",
+      password: "auditor123",
+      role: "Department Auditor",
+    },
   ];
 
   const fillDemoAccount = (account) => {

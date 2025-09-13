@@ -10,6 +10,15 @@ export const useItems = (params = {}) => {
     },
   });
 };
+export const useUpdateItem = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...itemData }) => api.put(`/items/${id}`, itemData),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["items"]);
+    },
+  });
+};
 
 export const useDeleteItem = () => {
   const queryClient = useQueryClient();
@@ -30,7 +39,6 @@ export const useCreateItem = () => {
   });
 };
 
-// Requisitions queries
 export const useRequisitions = (params = {}) => {
   return useQuery({
     queryKey: ["requisitions", params],
@@ -51,14 +59,12 @@ export const useCreateRequisition = () => {
   });
 };
 
-// Auth queries
 export const useLogin = () => {
   return useMutation({
     mutationFn: (credentials) => api.post("/auth/login", credentials),
   });
 };
 
-// Dashboard queries
 export const useDashboardStats = () => {
   return useQuery({
     queryKey: ["dashboard-stats"],
