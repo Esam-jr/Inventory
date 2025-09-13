@@ -39,25 +39,19 @@ const menuItems = [
     text: "Inventory",
     icon: <InventoryIcon />,
     path: "/inventory",
-    roles: [
-      "ADMIN",
-      "STOREKEEPER",
-      "PROCUREMENT_OFFICER",
-      "DEPARTMENT_HEAD",
-      "AUDITOR",
-    ],
+    roles: ["STOREKEEPER", "PROCUREMENT_OFFICER", "DEPARTMENT_HEAD", "AUDITOR"],
   },
   {
     text: "Requisitions",
     icon: <RequisitionIcon />,
     path: "/requisitions",
-    roles: ["ADMIN", "PROCUREMENT_OFFICER", "DEPARTMENT_HEAD", "AUDITOR"],
+    roles: ["PROCUREMENT_OFFICER", "DEPARTMENT_HEAD", "AUDITOR"],
   },
   {
     text: "Service Requests",
     icon: <ServiceRequestIcon />,
     path: "/service-requests",
-    roles: ["ADMIN", "PROCUREMENT_OFFICER", "DEPARTMENT_HEAD", "AUDITOR"],
+    roles: ["PROCUREMENT_OFFICER", "DEPARTMENT_HEAD", "AUDITOR"],
   },
   {
     text: "Transactions",
@@ -99,7 +93,7 @@ const Sidebar = ({ open, onClose, isMobile, userRole }) => {
 
   const drawerContent = (
     <Box sx={{ width: drawerWidth }}>
-      <Box sx={{ p: 2, textAlign: "center" }}>
+      <Box sx={{ p: 2, textAlign: "left" }}>
         <Typography
           variant="h6"
           sx={{
@@ -188,7 +182,7 @@ const Sidebar = ({ open, onClose, isMobile, userRole }) => {
           open={open}
           onClose={onClose}
           ModalProps={{
-            keepMounted: true, // Better open performance on mobile.
+            keepMounted: true,
           }}
           sx={{
             display: { xs: "block", md: "none" },

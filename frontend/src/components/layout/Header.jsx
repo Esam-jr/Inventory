@@ -23,6 +23,8 @@ import { useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useThemeContext } from "../../contexts/ThemeContext";
 
+const drawerWidth = 280;
+
 const Header = ({ onMenuClick }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const { user, logout } = useAuth();
@@ -61,9 +63,12 @@ const Header = ({ onMenuClick }) => {
         backgroundColor: theme.palette.background.paper,
         color: theme.palette.text.primary,
         boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
+        width: { md: `calc(100% - ${drawerWidth}px)` },
+        ml: { md: `${drawerWidth}px` },
       }}
     >
       <Toolbar>
+        {/* Menu button only on mobile */}
         <IconButton
           color="inherit"
           aria-label="open drawer"
@@ -74,6 +79,7 @@ const Header = ({ onMenuClick }) => {
           <MenuIcon />
         </IconButton>
 
+        {/* App Title */}
         <Typography
           variant="h6"
           component="div"
@@ -85,15 +91,16 @@ const Header = ({ onMenuClick }) => {
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
           }}
-        >
-          City Inventory System
-        </Typography>
+        ></Typography>
 
+        {/* Right side controls */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          {/* Theme toggle */}
           <IconButton color="inherit" onClick={toggleColorMode}>
             {mode === "dark" ? <Brightness7 /> : <Brightness4 />}
           </IconButton>
 
+          {/* User Role */}
           <Chip
             label={user?.role?.replace("_", " ") || "User"}
             color={getRoleColor(user?.role)}
@@ -101,6 +108,7 @@ const Header = ({ onMenuClick }) => {
             variant="outlined"
           />
 
+          {/* Avatar */}
           <IconButton
             size="large"
             edge="end"
@@ -123,6 +131,7 @@ const Header = ({ onMenuClick }) => {
             </Avatar>
           </IconButton>
 
+          {/* Profile Menu */}
           <Menu
             anchorEl={anchorEl}
             anchorOrigin={{
