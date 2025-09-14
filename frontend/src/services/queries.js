@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "./api";
 
+// ITEM MUTATIONS
 export const useItems = (params = {}) => {
   return useQuery({
     queryKey: ["items", params],
@@ -39,6 +40,24 @@ export const useCreateItem = () => {
   });
 };
 
+export const useLogin = () => {
+  return useMutation({
+    mutationFn: (credentials) => api.post("/auth/login", credentials),
+  });
+};
+
+export const useDashboardStats = () => {
+  return useQuery({
+    queryKey: ["dashboard-stats"],
+    queryFn: async () => {
+      const response = await api.get("/dashboard/stats");
+      return response.data;
+    },
+    refetchInterval: 300000,
+  });
+};
+
+// REQUISITION MUTATIONS
 export const useRequisitions = (params = {}) => {
   return useQuery({
     queryKey: ["requisitions", params],
@@ -59,23 +78,6 @@ export const useCreateRequisition = () => {
   });
 };
 
-export const useLogin = () => {
-  return useMutation({
-    mutationFn: (credentials) => api.post("/auth/login", credentials),
-  });
-};
-
-export const useDashboardStats = () => {
-  return useQuery({
-    queryKey: ["dashboard-stats"],
-    queryFn: async () => {
-      const response = await api.get("/dashboard/stats");
-      return response.data;
-    },
-    refetchInterval: 300000,
-  });
-};
-
 export const useUpdateRequisition = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -86,7 +88,18 @@ export const useUpdateRequisition = () => {
     },
   });
 };
-
+export const useFulfillRequisition = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (requisitionId) =>
+      api.post(`/requisitions/${requisitionId}/fulfill`),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["requisitions"]);
+      queryClient.invalidateQueries(["transactions"]);
+      queryClient.invalidateQueries(["items"]);
+    },
+  });
+};
 export const useUpdateRequisitionStatus = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -135,20 +148,47 @@ export const useCreateTransaction = () => {
     },
   });
 };
+export const useTransactions = (params = {}) => {
+  return useQuery({
+    queryKey: ["transactions", params],
+    queryFn: async () => {
+      const response = await api.get("/transactions", { params });
+      return response.data;
+    },
+  });
+};
 
-export const useFulfillRequisition = () => {
+export const useTransactionStats = (params = {}) => {
+  return useQuery({
+    queryKey: ["transaction-stats", params],
+    queryFn: async () => {
+      const response = await api.get("/transactions/stats", { params });
+      return response.data;
+    },
+    refetchInterval: 300000,
+  });
+};
+export const useTransactionDetail = (transactionId) => {
+  return useQuery({
+    queryKey: ["transactions", transactionId],
+    queryFn: async () => {
+      const response = await api.get(`/transactions/${transactionId}`);
+      return response.data;
+    },
+    enabled: !!transactionId,
+  });
+};
+export const useAdjustStock = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (requisitionId) =>
-      api.post(`/requisitions/${requisitionId}/fulfill`),
+    mutationFn: (adjustmentData) =>
+      api.post("/transactions/adjust", adjustmentData),
     onSuccess: () => {
-      queryClient.invalidateQueries(["requisitions"]);
       queryClient.invalidateQueries(["transactions"]);
       queryClient.invalidateQueries(["items"]);
     },
   });
 };
-
 // USER MUTATIONS (Admin only)
 export const useUsers = () => {
   const queryClient = useQueryClient();

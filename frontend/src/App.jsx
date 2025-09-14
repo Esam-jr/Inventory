@@ -26,6 +26,7 @@ import ReportBuilder from "./pages/Reports/ReportBuilder";
 import ReportView from "./pages/Reports/ReportView";
 import Profile from "./pages/Profile/Profile";
 import UserManagment from "./pages/Userss/UserManagment";
+import TransactionList from "./pages/Transactions/TransactionList";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -97,6 +98,7 @@ function AppContent() {
                     <Route path="/reports/:id" element={<ReportView />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/" element={<Navigate to="/dashboard" />} />
+                    <Route path="/transactions" element={<TransactionList />} />
                     <Route path="*" element={<div>Page not found</div>} />
                   </Routes>
                 </ErrorBoundary>
