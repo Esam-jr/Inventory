@@ -40,6 +40,18 @@ export const useCreateItem = () => {
   });
 };
 
+// Single item detail
+export const useItem = (itemId) => {
+  return useQuery({
+    queryKey: ["items", itemId],
+    queryFn: async () => {
+      const response = await api.get(`/items/${itemId}`);
+      return response.data;
+    },
+    enabled: !!itemId,
+  });
+};
+
 export const useLogin = () => {
   return useMutation({
     mutationFn: (credentials) => api.post("/auth/login", credentials),
@@ -65,6 +77,17 @@ export const useRequisitions = (params = {}) => {
       const response = await api.get("/requisitions", { params });
       return response.data;
     },
+  });
+};
+
+export const useRequisitionDetail = (requisitionId) => {
+  return useQuery({
+    queryKey: ["requisitions", requisitionId],
+    queryFn: async () => {
+      const response = await api.get(`/requisitions/${requisitionId}`);
+      return response.data;
+    },
+    enabled: !!requisitionId,
   });
 };
 
@@ -134,6 +157,28 @@ export const useUpdateServiceRequestStatus = () => {
     onSuccess: () => {
       queryClient.invalidateQueries(["service-requests"]);
     },
+  });
+};
+
+// SERVICE REQUEST QUERIES
+export const useServiceRequests = (params = {}) => {
+  return useQuery({
+    queryKey: ["service-requests", params],
+    queryFn: async () => {
+      const response = await api.get("/service-requests", { params });
+      return response.data;
+    },
+  });
+};
+
+export const useServiceRequestDetail = (id) => {
+  return useQuery({
+    queryKey: ["service-requests", id],
+    queryFn: async () => {
+      const response = await api.get(`/service-requests/${id}`);
+      return response.data;
+    },
+    enabled: !!id,
   });
 };
 
