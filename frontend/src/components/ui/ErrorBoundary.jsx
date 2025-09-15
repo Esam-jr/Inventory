@@ -62,7 +62,7 @@ class ErrorBoundary extends Component {
               or contact support if the problem persists.
             </Typography>
 
-            {process.env.NODE_ENV === "development" && (
+            {import.meta.env.DEV && (
               <Paper
                 variant="outlined"
                 sx={{

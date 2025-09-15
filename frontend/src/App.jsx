@@ -23,6 +23,7 @@ import ItemDetail from "./pages/Inventory/ItemDetail";
 import RequisitionList from "./pages/Requisitions/RequisitionList";
 import RequisitionForm from "./pages/Requisitions/RequisitionForm";
 import RequisitionDetail from "./pages/Requisitions/RequisitionDetail";
+import FulfillRequisitions from "./pages/Requisitions/FulfillRequisitions";
 import ReportBuilder from "./pages/Reports/ReportBuilder";
 import ReportView from "./pages/Reports/ReportView";
 import Profile from "./pages/Profile/Profile";
@@ -97,6 +98,14 @@ function AppContent() {
                     <Route
                       path="/requisitions/:id"
                       element={<RequisitionDetail />}
+                    />
+                    <Route
+                      path="/requisitions/fulfill"
+                      element={
+                        <ProtectedRoute requiredRoles={["STOREKEEPER"]}>
+                          <FulfillRequisitions />
+                        </ProtectedRoute>
+                      }
                     />
                     <Route
                       path="/users"

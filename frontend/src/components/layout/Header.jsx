@@ -91,7 +91,9 @@ const Header = ({ onMenuClick }) => {
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
           }}
-        ></Typography>
+        >
+          {import.meta.env.VITE_APP_NAME || "Inventory"}
+        </Typography>
 
         {/* Right side controls */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
