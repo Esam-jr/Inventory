@@ -12,10 +12,17 @@ export const useThemeContext = () => {
 };
 
 export const AppThemeProvider = ({ children }) => {
-  const [mode, setMode] = useState("light");
+  const [mode, setMode] = useState(() => {
+    const saved = localStorage.getItem("themeMode");
+    return saved === "light" || saved === "dark" ? saved : "light";
+  });
 
   const toggleColorMode = () => {
-    setMode((prevMode) => (prevMode === "light" ? "dark" : "light"));
+    setMode((prevMode) => {
+      const next = prevMode === "light" ? "dark" : "light";
+      localStorage.setItem("themeMode", next);
+      return next;
+    });
   };
 
   const theme = useMemo(
