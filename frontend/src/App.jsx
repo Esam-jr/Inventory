@@ -19,6 +19,7 @@ import ErrorBoundary from "./components/ui/ErrorBoundary";
 import ItemList from "./pages/Inventory/ItemList";
 import ItemForm from "./pages/Inventory/ItemForm";
 import InventoryStats from "./pages/Inventory/InventoryStats";
+import ItemDetail from "./pages/Inventory/ItemDetail";
 import RequisitionList from "./pages/Requisitions/RequisitionList";
 import RequisitionForm from "./pages/Requisitions/RequisitionForm";
 import RequisitionDetail from "./pages/Requisitions/RequisitionDetail";
@@ -27,6 +28,9 @@ import ReportView from "./pages/Reports/ReportView";
 import Profile from "./pages/Profile/Profile";
 import UserManagment from "./pages/Userss/UserManagment";
 import TransactionList from "./pages/Transactions/TransactionList";
+import ServiceRequestList from "./pages/ServiceRequests/ServiceRequestList";
+import ServiceRequestForm from "./pages/ServiceRequests/ServiceRequestForm";
+import ServiceRequestDetail from "./pages/ServiceRequests/ServiceRequestDetail";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -76,6 +80,7 @@ function AppContent() {
                       path="/inventory/edit/:id"
                       element={<ItemForm editMode />}
                     />
+                    <Route path="/inventory/:id" element={<ItemDetail />} />
                     <Route
                       path="/inventory/stats"
                       element={<InventoryStats />}
@@ -93,12 +98,23 @@ function AppContent() {
                       path="/requisitions/:id"
                       element={<RequisitionDetail />}
                     />
-                    <Route path="/users" element={<UserManagment />} />
+                    <Route
+                      path="/users"
+                      element={
+                        <ProtectedRoute requiredRoles={["ADMIN"]}>
+                          <UserManagment />
+                        </ProtectedRoute>
+                      }
+                    />
                     <Route path="/reports" element={<ReportBuilder />} />
                     <Route path="/reports/:id" element={<ReportView />} />
                     <Route path="/profile" element={<Profile />} />
-                    <Route path="/" element={<Navigate to="/dashboard" />} />
                     <Route path="/transactions" element={<TransactionList />} />
+                    {/* Service Requests - stubs for now */}
+                    <Route path="/service-requests" element={<ServiceRequestList />} />
+                    <Route path="/service-requests/new" element={<ServiceRequestForm />} />
+                    <Route path="/service-requests/:id" element={<ServiceRequestDetail />} />
+                    <Route path="/" element={<Navigate to="/dashboard" />} />
                     <Route path="*" element={<div>Page not found</div>} />
                   </Routes>
                 </ErrorBoundary>
