@@ -13,7 +13,6 @@ import {
   Select,
 } from "@mui/material";
 import {
-  Add as AddIcon,
   FilterList as FilterIcon,
   Visibility as ViewIcon,
 } from "@mui/icons-material";
@@ -103,7 +102,7 @@ const ServiceRequestList = () => {
   if (isLoading) return <LoadingSpinner message="Loading service requests..." />;
   if (error) return <div>Error loading service requests: {error.message}</div>;
 
-  const canCreate = ["PROCUREMENT_OFFICER", "DEPARTMENT_HEAD"].includes(user?.role);
+  const canCreate = false;
 
   return (
     <Box>
@@ -126,15 +125,7 @@ const ServiceRequestList = () => {
           >
             Filter
           </Button>
-          {canCreate && (
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => navigate(`/service-requests/new`)}
-            >
-              New Request
-            </Button>
-          )}
+          {/* Create new request removed per requirement */}
         </Box>
       </Box>
 

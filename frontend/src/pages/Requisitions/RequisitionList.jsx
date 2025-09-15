@@ -13,10 +13,8 @@ import {
   Select,
 } from "@mui/material";
 import {
-  Add as AddIcon,
   FilterList as FilterIcon,
   Visibility as ViewIcon,
-  Edit as EditIcon,
 } from "@mui/icons-material";
 import { DataGrid } from "@mui/x-data-grid";
 import { useRequisitions } from "../../services/queries";
@@ -114,14 +112,7 @@ const RequisitionList = () => {
           >
             <ViewIcon />
           </IconButton>
-          {(user?.role === "ADMIN" || user?.role === "PROCUREMENT_OFFICER") && (
-            <IconButton
-              size="small"
-              onClick={() => navigate(`/requisitions/edit/${params.row.id}`)}
-            >
-              <EditIcon />
-            </IconButton>
-          )}
+          {/* Edit removed per requirement */}
         </Box>
       ),
     },
@@ -150,13 +141,6 @@ const RequisitionList = () => {
             onClick={(e) => setFilterAnchorEl(e.currentTarget)}
           >
             Filter
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => navigate(`/requisitions/new`)}
-          >
-            New Requisition
           </Button>
         </Box>
       </Box>
