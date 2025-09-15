@@ -30,6 +30,9 @@ const ProcurementDashboard = () => {
   const { data: pendingRequisitions = [], isLoading: prLoading } = useRequisitions({ status: "PENDING" });
   const { data: pendingServiceRequests = [], isLoading: psrLoading } = useServiceRequests({ status: "PENDING" });
   const { data: sReqStats } = useServiceRequestStats();
+  // recent decisions from service requests (approved/rejected)
+  const { data: sReqApproved = [] } = useServiceRequests({ status: "APPROVED" });
+  const { data: sReqRejected = [] } = useServiceRequests({ status: "REJECTED" });
 
   if (isLoading || prLoading || psrLoading) return <LoadingSpinner />;
   if (error) return <div>Error loading dashboard data</div>;
@@ -174,37 +177,63 @@ const ProcurementDashboard = () => {
         <Typography variant="h6" gutterBottom>
           Recent Decisions
         </Typography>
-        <Grid container spacing={2}>
-          {stats?.recentDecisions?.slice(0, 4).map((decision, index) => (
-            <Grid item xs={12} sm={6} key={index}>
-              <Box
-                sx={{
-                  p: 2,
-                  border: 1,
-                  borderColor: "divider",
-                  borderRadius: 1,
-                  bgcolor:
-                    decision.status === "APPROVED"
-                      ? "success.light"
-                      : "error.light",
-                }}
-              >
-                <Typography variant="subtitle2" gutterBottom>
-                  {decision.title}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {decision.department} • {decision.processedBy}
-                </Typography>
-                <Chip
-                  label={decision.status}
-                  size="small"
-                  color={decision.status === "APPROVED" ? "success" : "error"}
-                  sx={{ mt: 1 }}
-                />
-              </Box>
+        {(() => {
+          const mapReqDecisions = (list = []) =>
+            list.map((d) => ({
+              title: d.title,
+              department: d.department?.name || d.department || "",
+              processedBy:
+                d.processedBy?.firstName
+                  ? `${d.processedBy.firstName} ${d.processedBy.lastName || ""}`.trim()
+                  : d.processedBy || "",
+              status: d.status,
+              time: d.processedAt || d.createdAt,
+            }));
+          const reqDecisions = mapReqDecisions(stats?.recentDecisions || []);
+          const sDecisions = mapReqDecisions([...(sReqApproved || []), ...(sReqRejected || [])]);
+          const combined = [...reqDecisions, ...sDecisions]
+            .filter((d) => d.status === "APPROVED" || d.status === "REJECTED")
+            .sort((a, b) => new Date(b.time) - new Date(a.time))
+            .slice(0, 4);
+          return (
+            <Grid container spacing={2}>
+              {combined.map((decision, index) => (
+                <Grid item xs={12} sm={6} key={index}>
+                  <Box
+                    sx={{
+                      p: 2,
+                      border: 1,
+                      borderColor: "divider",
+                      borderRadius: 1,
+                      bgcolor:
+                        decision.status === "APPROVED"
+                          ? "success.light"
+                          : "error.light",
+                    }}
+                  >
+                    <Typography variant="subtitle2" gutterBottom>
+                      {decision.title}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {decision.department} • {decision.processedBy}
+                    </Typography>
+                    <Chip
+                      label={decision.status}
+                      size="small"
+                      color={decision.status === "APPROVED" ? "success" : "error"}
+                      sx={{ mt: 1 }}
+                    />
+                  </Box>
+                </Grid>
+              ))}
+              {combined.length === 0 && (
+                <Grid item xs={12}>
+                  <Typography color="text.secondary">No recent decisions</Typography>
+                </Grid>
+              )}
             </Grid>
-          ))}
-        </Grid>
+          );
+        })()}
       </Paper>
     </Box>
   );
