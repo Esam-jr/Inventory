@@ -9,32 +9,34 @@ import {
   List,
   ListItem,
   ListItemText,
+  Grid,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import {
   ArrowBack as BackIcon,
   Edit as EditIcon,
   Print as PrintIcon,
+  Delete as DeleteIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import { useRequisitionDetail } from "../../services/queries";
+import ConfirmDialog from "../../components/ui/ConfirmDialog";
+import { useState } from "react";
 
 const RequisitionDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // Mock data - replace with actual API call
-  const requisition = {
-    id: 1,
-    title: "Office Supplies Request",
-    description: "Monthly office supplies for administration department",
-    status: "APPROVED",
-    department: { name: "Administration" },
-    createdBy: { firstName: "John", lastName: "Doe" },
-    createdAt: "2024-01-15T10:30:00.000Z",
-    items: [
-      { item: { name: "A4 Paper", unit: "ream" }, quantity: 5 },
-      { item: { name: "Ballpoint Pens", unit: "box" }, quantity: 2 },
-    ],
+  const { data: requisition, isLoading, error } = useRequisitionDetail(id);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [snack, setSnack] = useState({ open: false, message: "", severity: "warning" });
+  const handleDelete = () => setConfirmOpen(true);
+  const handleConfirmDelete = () => {
+    setConfirmOpen(false);
+    setSnack({ open: true, message: "Deletion is not supported by the backend.", severity: "warning" });
   };
+  const closeSnack = () => setSnack((s) => ({ ...s, open: false }));
 
   const getStatusColor = (status) => {
     const colors = {
@@ -45,6 +47,26 @@ const RequisitionDetail = () => {
     };
     return colors[status] || "default";
   };
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
+        <Typography variant="body1">Loading requisition...</Typography>
+      </Box>
+    );
+  }
+  if (error) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
+        <Typography variant="body1" color="error">
+          Error loading requisition: {error.message}
+        </Typography>
+      </Box>
+    );
+  }
+  if (!requisition) {
+    return null;
+  }
 
   return (
     <Box>
@@ -64,6 +86,15 @@ const RequisitionDetail = () => {
           color={getStatusColor(requisition.status)}
           sx={{ ml: "auto" }}
         />
+        <Button
+          variant="outlined"
+          color="error"
+          startIcon={<DeleteIcon />}
+          onClick={handleDelete}
+          sx={{ ml: 2 }}
+        >
+          Delete
+        </Button>
       </Box>
 
       <Grid container spacing={3}>
@@ -82,14 +113,19 @@ const RequisitionDetail = () => {
               Items Requested
             </Typography>
             <List>
-              {requisition.items.map((item, index) => (
+              {requisition.items?.map((ri, index) => (
                 <ListItem key={index} divider>
                   <ListItemText
-                    primary={item.item.name}
-                    secondary={`Quantity: ${item.quantity} ${item.item.unit}`}
+                    primary={ri.item?.name}
+                    secondary={`Quantity: ${ri.quantity} ${ri.item?.unit || ""}`}
                   />
                 </ListItem>
               ))}
+              {(!requisition.items || requisition.items.length === 0) && (
+                <ListItem>
+                  <ListItemText primary="No items" />
+                </ListItem>
+              )}
             </List>
           </Paper>
         </Grid>
@@ -104,7 +140,7 @@ const RequisitionDetail = () => {
                 Department
               </Typography>
               <Typography variant="body1">
-                {requisition.department.name}
+                {requisition.department?.name}
               </Typography>
             </Box>
             <Box sx={{ mb: 2 }}>
@@ -112,8 +148,7 @@ const RequisitionDetail = () => {
                 Requested By
               </Typography>
               <Typography variant="body1">
-                {requisition.createdBy.firstName}{" "}
-                {requisition.createdBy.lastName}
+                {requisition.createdBy?.firstName} {requisition.createdBy?.lastName}
               </Typography>
             </Box>
             <Box sx={{ mb: 2 }}>
@@ -142,6 +177,27 @@ const RequisitionDetail = () => {
           </Paper>
         </Grid>
       </Grid>
+    {/* Delete confirm and snackbar */}
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Requisition"
+        message="Deletion is not supported by the backend at the moment."
+        confirmText="OK"
+        cancelText="Close"
+        severity="warning"
+      />
+      <Snackbar
+        open={snack.open}
+        autoHideDuration={4000}
+        onClose={closeSnack}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert onClose={closeSnack} severity={snack.severity} variant="filled">
+          {snack.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

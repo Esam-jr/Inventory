@@ -13,6 +13,8 @@ import {
   Chip,
   Avatar,
   Divider,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import {
   RequestQuote as RequisitionIcon,
@@ -21,144 +23,215 @@ import {
   CheckCircle as ApprovedIcon,
   Schedule as PendingIcon,
 } from "@mui/icons-material";
-import { useDashboardStats } from "../../services/queries";
+import { Delete as DeleteIcon } from "@mui/icons-material";
+import ConfirmDialog from "../../components/ui/ConfirmDialog";
+import { useDashboardStats, useRequisitions, useServiceRequests } from "../../services/queries";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 
 const DepartmentHeadDashboard = () => {
-  const { data: stats, isLoading, error } = useDashboardStats();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { data: stats, isLoading: statsLoading, error } = useDashboardStats();
+  const { data: reqs, isLoading: reqLoading, error: reqError } = useRequisitions({});
+  const { data: sreqs, isLoading: sreqLoading, error: sreqError } = useServiceRequests({});
 
-  if (isLoading) return <LoadingSpinner />;
+  if (statsLoading || reqLoading || sreqLoading) return <LoadingSpinner />;
   if (error) return <div>Error loading dashboard data</div>;
 
-  const myRequests = stats?.myRequests || {};
+  const currentUserId = user?.id || user?._id || user?.userId;
+  const currentUserEmail = user?.email;
+  const matchesUser = (u) => {
+    const uid = u?.id || u?._id || u?.userId;
+    const email = u?.email;
+    return (
+      (currentUserId && String(uid) === String(currentUserId)) ||
+      (currentUserEmail && email && email.toLowerCase() === currentUserEmail.toLowerCase())
+    );
+  };
+
+  const myRequisitions = (reqs || []).filter((r) => matchesUser(r.createdBy));
+  const myServiceRequests = (sreqs || []).filter((r) => matchesUser(r.createdBy));
+
+  // Delete UI (backend does not support deletion; show info)
+  const [confirm, setConfirm] = useState({ open: false, target: null, type: null });
+  const [snack, setSnack] = useState({ open: false, message: "", severity: "info" });
+  const requestDelete = (type, item) => setConfirm({ open: true, target: item, type });
+  const handleConfirmDelete = () => {
+    setConfirm({ open: false, target: null, type: null });
+    setSnack({ open: true, message: "Deletion is not supported by the backend.", severity: "warning" });
+  };
+  const closeSnack = () => setSnack((s) => ({ ...s, open: false }));
 
   return (
     <Box>
-      {/* Department Overview */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: "center" }}>
-              <RequisitionIcon color="primary" sx={{ fontSize: 40, mb: 1 }} />
-              <Typography variant="h4">
-                {(myRequests.requisitions?.length || 0) +
-                  (myRequests.serviceRequests?.length || 0)}
-              </Typography>
-              <Typography color="textSecondary">Total Requests</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: "center" }}>
-              <ApprovedIcon color="success" sx={{ fontSize: 40, mb: 1 }} />
-              <Typography variant="h4">
-                {myRequests.requisitions?.filter((r) => r.status === "APPROVED")
-                  .length || 0}
-              </Typography>
-              <Typography color="textSecondary">Approved</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: "center" }}>
-              <PendingIcon color="warning" sx={{ fontSize: 40, mb: 1 }} />
-              <Typography variant="h4">
-                {myRequests.requisitions?.filter((r) => r.status === "PENDING")
-                  .length || 0}
-              </Typography>
-              <Typography color="textSecondary">Pending</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: "center" }}>
-              <TeamIcon color="info" sx={{ fontSize: 40, mb: 1 }} />
-              <Typography variant="h4">
-                {stats?.departmentInfo?.totalMembers || 0}
-              </Typography>
-              <Typography color="textSecondary">Team Members</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+      {/* Department Overview using CSS Grid */}
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: {
+            xs: "1fr",
+            sm: "repeat(2, 1fr)",
+            md: "repeat(4, 1fr)",
+          },
+          gap: 3,
+          mb: 4,
+        }}
+      >
+        <Card>
+          <CardContent sx={{ textAlign: "center" }}>
+            <RequisitionIcon color="primary" sx={{ fontSize: 40, mb: 1 }} />
+            <Typography variant="h4">
+              {myRequisitions.length + myServiceRequests.length}
+            </Typography>
+            <Typography color="textSecondary">Total Requests</Typography>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent sx={{ textAlign: "center" }}>
+            <ApprovedIcon color="success" sx={{ fontSize: 40, mb: 1 }} />
+            <Typography variant="h4">
+              {myRequisitions.filter((r) => r.status === "APPROVED").length}
+            </Typography>
+            <Typography color="textSecondary">Approved</Typography>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent sx={{ textAlign: "center" }}>
+            <PendingIcon color="warning" sx={{ fontSize: 40, mb: 1 }} />
+            <Typography variant="h4">
+              {myRequisitions.filter((r) => r.status === "PENDING").length}
+            </Typography>
+            <Typography color="textSecondary">Pending</Typography>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent sx={{ textAlign: "center" }}>
+            <TeamIcon color="info" sx={{ fontSize: 40, mb: 1 }} />
+            <Typography variant="h4">
+              {stats?.departmentInfo?.totalMembers || 0}
+            </Typography>
+            <Typography color="textSecondary">Team Members</Typography>
+          </CardContent>
+        </Card>
+      </Box>
 
       <Grid container spacing={3}>
         {/* My Requests */}
-        <Grid item xs={12} md={8}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
+        <Grid item xs={12} md={9}>
+          <Paper sx={{ p: 3, borderRadius: 3 }}>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 700 }}>
               My Recent Requests
             </Typography>
+            <Divider sx={{ mb: 2 }} />
 
             {/* Requisitions */}
             <Typography
               variant="subtitle2"
               color="text.secondary"
-              sx={{ mt: 2, mb: 1 }}
+              sx={{ mt: 2, mb: 1, fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase' }}
             >
               Requisitions
             </Typography>
+            {reqError && (
+              <Typography variant="caption" color="error">Failed to load requisitions</Typography>
+            )}
             <List>
-              {myRequests.requisitions?.slice(0, 3).map((req, index) => (
-                <ListItem key={index} divider>
+              {myRequisitions.slice(0, 3).map((req, index) => (
+                <ListItem key={index} divider onClick={() => navigate(`/requisitions/${req.id || req._id}`)} sx={{ cursor: "pointer" }}>
                   <ListItemText
                     primary={req.title}
-                    secondary={`${req.items} items • ${new Date(
+                    secondary={`${req.items?.length || 0} items • ${new Date(
                       req.createdAt
                     ).toLocaleDateString()}`}
                   />
-                  <Chip
-                    label={req.status}
-                    size="small"
-                    color={
-                      req.status === "APPROVED"
-                        ? "success"
-                        : req.status === "PENDING"
-                        ? "warning"
-                        : "default"
-                    }
-                  />
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Button
+                      size="small"
+                      color="error"
+                      variant="outlined"
+                      startIcon={<DeleteIcon />}
+                      onClick={(e) => { e.stopPropagation(); requestDelete('requisition', req); }}
+                    >
+                      Delete
+                    </Button>
+                    <Chip
+                      label={req.status}
+                      size="small"
+                      color={
+                        req.status === "APPROVED"
+                          ? "success"
+                          : req.status === "PENDING"
+                          ? "warning"
+                          : "default"
+                      }
+                    />
+                  </Box>
                 </ListItem>
               ))}
+              {myRequisitions.length === 0 && (
+                <ListItem>
+                  <ListItemText primary="No requisitions yet" />
+                </ListItem>
+              )}
             </List>
 
             {/* Service Requests */}
+            <Divider sx={{ my: 2 }} />
             <Typography
               variant="subtitle2"
               color="text.secondary"
-              sx={{ mt: 3, mb: 1 }}
+              sx={{ mb: 1, fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase' }}
             >
               Service Requests
             </Typography>
+            {sreqError && (
+              <Typography variant="caption" color="error">Failed to load service requests</Typography>
+            )}
             <List>
-              {myRequests.serviceRequests?.slice(0, 3).map((req, index) => (
-                <ListItem key={index} divider>
+              {myServiceRequests.slice(0, 3).map((req, index) => (
+                <ListItem key={index} divider onClick={() => navigate(`/service-requests/${req.id || req._id}`)} sx={{ cursor: "pointer" }}>
                   <ListItemText
                     primary={req.title}
                     secondary={new Date(req.createdAt).toLocaleDateString()}
                   />
-                  <Chip
-                    label={req.status}
-                    size="small"
-                    color={
-                      req.status === "APPROVED"
-                        ? "success"
-                        : req.status === "PENDING"
-                        ? "warning"
-                        : "default"
-                    }
-                  />
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Button
+                      size="small"
+                      color="error"
+                      variant="outlined"
+                      startIcon={<DeleteIcon />}
+                      onClick={(e) => { e.stopPropagation(); requestDelete('service', req); }}
+                    >
+                      Delete
+                    </Button>
+                    <Chip
+                      label={req.status}
+                      size="small"
+                      color={
+                        req.status === "APPROVED"
+                          ? "success"
+                          : req.status === "PENDING"
+                          ? "warning"
+                          : "default"
+                      }
+                    />
+                  </Box>
                 </ListItem>
               ))}
+              {myServiceRequests.length === 0 && (
+                <ListItem>
+                  <ListItemText primary="No service requests yet" />
+                </ListItem>
+              )}
             </List>
 
             <Button
               variant="contained"
               startIcon={<RequestIcon />}
               sx={{ mt: 2 }}
+              onClick={() => navigate('/requisitions/new')}
             >
               Create New Request
             </Button>
@@ -166,12 +239,13 @@ const DepartmentHeadDashboard = () => {
         </Grid>
 
         {/* Team & Quick Actions */}
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={3}>
           {/* Department Info */}
-          <Paper sx={{ p: 3, mb: 3 }}>
-            <Typography variant="h6" gutterBottom>
+          <Paper variant="outlined" sx={{ p: 3, mb: 3, borderRadius: 3 }}>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 700 }}>
               Department Information
             </Typography>
+            <Divider sx={{ mb: 2 }} />
             <Typography variant="body2" color="text.secondary" paragraph>
               {stats?.departmentInfo?.name}
             </Typography>
@@ -182,24 +256,46 @@ const DepartmentHeadDashboard = () => {
           </Paper>
 
           {/* Quick Actions */}
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
+          <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 700 }}>
               Quick Actions
             </Typography>
+            <Divider sx={{ mb: 2 }} />
             <Box display="flex" flexDirection="column" gap={1}>
-              <Button variant="outlined" startIcon={<RequestIcon />} fullWidth>
+              <Button variant="contained" startIcon={<RequestIcon />} fullWidth onClick={() => navigate('/requisitions/new')}>
                 New Requisition
               </Button>
-              <Button variant="outlined" startIcon={<RequestIcon />} fullWidth>
+              <Button variant="outlined" startIcon={<RequestIcon />} fullWidth onClick={() => navigate('/service-requests/new')}>
                 New Service Request
               </Button>
-              <Button variant="outlined" startIcon={<TeamIcon />} fullWidth>
+              <Button variant="outlined" startIcon={<TeamIcon />} fullWidth disabled>
                 View Team
               </Button>
             </Box>
           </Paper>
         </Grid>
       </Grid>
+    {/* Global Confirm and Snackbar */}
+      <ConfirmDialog
+        open={confirm.open}
+        onClose={() => setConfirm({ open: false, target: null, type: null })}
+        onConfirm={handleConfirmDelete}
+        title="Delete Request"
+        message="Deletion is not supported by the backend at the moment."
+        confirmText="OK"
+        cancelText="Close"
+        severity="warning"
+      />
+      <Snackbar
+        open={snack.open}
+        autoHideDuration={4000}
+        onClose={closeSnack}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert onClose={closeSnack} severity={snack.severity} variant="filled">
+          {snack.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

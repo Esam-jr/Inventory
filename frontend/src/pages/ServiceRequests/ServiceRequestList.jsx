@@ -16,32 +16,38 @@ import {
   Add as AddIcon,
   FilterList as FilterIcon,
   Visibility as ViewIcon,
-  Edit as EditIcon,
 } from "@mui/icons-material";
 import { DataGrid } from "@mui/x-data-grid";
-import { useRequisitions } from "../../services/queries";
+import { useServiceRequests } from "../../services/queries";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 
-const RequisitionList = () => {
+const ServiceRequestList = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [filterAnchorEl, setFilterAnchorEl] = useState(null);
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const {
-    data: requisitions,
-    isLoading,
-    error,
-  } = useRequisitions({
+  const { data: requests, isLoading, error } = useServiceRequests({
     status: statusFilter !== "all" ? statusFilter : undefined,
   });
+
+  const statusColor = (status) => {
+    const map = {
+      PENDING: "warning",
+      APPROVED: "success",
+      REJECTED: "error",
+      IN_PROGRESS: "info",
+      COMPLETED: "success",
+    };
+    return map[status] || "default";
+  };
 
   const columns = [
     {
       field: "title",
-      headerName: "Requisition",
+      headerName: "Service Request",
       flex: 2,
       renderCell: (params) => (
         <Box>
@@ -55,32 +61,12 @@ const RequisitionList = () => {
       ),
     },
     {
-      field: "department",
-      headerName: "Department",
-      flex: 1,
-      renderCell: (params) => (
-        <Chip label={params.value?.name} size="small" variant="outlined" />
-      ),
-    },
-    {
       field: "status",
       headerName: "Status",
       flex: 1,
-      renderCell: (params) => {
-        const statusColors = {
-          PENDING: "warning",
-          APPROVED: "success",
-          REJECTED: "error",
-          FULFILLED: "info",
-        };
-        return (
-          <Chip
-            label={params.value}
-            color={statusColors[params.value]}
-            size="small"
-          />
-        );
-      },
+      renderCell: (params) => (
+        <Chip label={params.value} size="small" color={statusColor(params.value)} />
+      ),
     },
     {
       field: "createdBy",
@@ -105,30 +91,19 @@ const RequisitionList = () => {
     {
       field: "actions",
       headerName: "Actions",
-      flex: 1,
+      width: 100,
       renderCell: (params) => (
-        <Box>
-          <IconButton
-            size="small"
-            onClick={() => navigate(`/requisitions/${params.row.id}`)}
-          >
-            <ViewIcon />
-          </IconButton>
-          {(user?.role === "ADMIN" || user?.role === "PROCUREMENT_OFFICER") && (
-            <IconButton
-              size="small"
-              onClick={() => navigate(`/requisitions/edit/${params.row.id}`)}
-            >
-              <EditIcon />
-            </IconButton>
-          )}
-        </Box>
+        <IconButton size="small" onClick={() => navigate(`/service-requests/${params.row.id}`)}>
+          <ViewIcon />
+        </IconButton>
       ),
     },
   ];
 
-  if (isLoading) return <LoadingSpinner message="Loading requisitions..." />;
-  if (error) return <div>Error loading requisitions: {error.message}</div>;
+  if (isLoading) return <LoadingSpinner message="Loading service requests..." />;
+  if (error) return <div>Error loading service requests: {error.message}</div>;
+
+  const canCreate = ["PROCUREMENT_OFFICER", "DEPARTMENT_HEAD"].includes(user?.role);
 
   return (
     <Box>
@@ -141,7 +116,7 @@ const RequisitionList = () => {
         }}
       >
         <Typography variant="h4" component="h1" fontWeight="bold">
-          Requisitions
+          Service Requests
         </Typography>
         <Box sx={{ display: "flex", gap: 2 }}>
           <Button
@@ -151,13 +126,15 @@ const RequisitionList = () => {
           >
             Filter
           </Button>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => navigate(`/requisitions/new`)}
-          >
-            New Requisition
-          </Button>
+          {canCreate && (
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => navigate(`/service-requests/new`)}
+            >
+              New Request
+            </Button>
+          )}
         </Box>
       </Box>
 
@@ -178,23 +155,18 @@ const RequisitionList = () => {
               <MenuItem value="PENDING">Pending</MenuItem>
               <MenuItem value="APPROVED">Approved</MenuItem>
               <MenuItem value="REJECTED">Rejected</MenuItem>
-              <MenuItem value="FULFILLED">Fulfilled</MenuItem>
+              <MenuItem value="IN_PROGRESS">In Progress</MenuItem>
+              <MenuItem value="COMPLETED">Completed</MenuItem>
             </Select>
           </FormControl>
         </MenuItem>
       </Menu>
 
       <Paper sx={{ height: 600, width: "100%" }}>
-        <DataGrid
-          rows={requisitions || []}
-          columns={columns}
-          pageSize={10}
-          rowsPerPageOptions={[10, 25, 50]}
-          loading={isLoading}
-        />
+        <DataGrid rows={requests || []} columns={columns} pageSize={10} rowsPerPageOptions={[10, 25, 50]} />
       </Paper>
     </Box>
   );
 };
 
-export default RequisitionList;
+export default ServiceRequestList;
