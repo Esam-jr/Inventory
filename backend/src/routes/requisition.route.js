@@ -34,8 +34,6 @@ router.get(
 
 router.get("/:id", getRequisitionById);
 
-router.get("/:id", getRequisitionById);
-
 router.patch(
   "/:id/status",
   authorize("PROCUREMENT_OFFICER"),
