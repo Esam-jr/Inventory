@@ -20,100 +20,72 @@ import {
   Cancel as RejectedIcon,
   TrendingUp as StatsIcon,
 } from "@mui/icons-material";
-import { useDashboardStats } from "../../services/queries";
+import { useDashboardStats, useRequisitions, useServiceRequests } from "../../services/queries";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
+import { useNavigate } from "react-router-dom";
 
 const ProcurementDashboard = () => {
+  const navigate = useNavigate();
   const { data: stats, isLoading, error } = useDashboardStats();
+  const { data: pendingRequisitions = [], isLoading: prLoading } = useRequisitions({ status: "PENDING" });
+  const { data: pendingServiceRequests = [], isLoading: psrLoading } = useServiceRequests({ status: "PENDING" });
 
-  if (isLoading) return <LoadingSpinner />;
+  if (isLoading || prLoading || psrLoading) return <LoadingSpinner />;
   if (error) return <div>Error loading dashboard data</div>;
 
-  const pendingRequisitions = stats?.pendingRequisitions || [];
-  const pendingServiceRequests = stats?.pendingServiceRequests || [];
-
+    
   return (
     <Box>
-      {/* Approval Stats */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: "center" }}>
-              <PendingIcon color="warning" sx={{ fontSize: 40, mb: 1 }} />
-              <Typography variant="h4">
-                {stats?.pendingApprovals?.requisitions || 0}
-              </Typography>
-              <Typography color="textSecondary">
-                Pending Requisitions
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: "center" }}>
-              <PendingIcon color="info" sx={{ fontSize: 40, mb: 1 }} />
-              <Typography variant="h4">
-                {stats?.pendingApprovals?.serviceRequests || 0}
-              </Typography>
-              <Typography color="textSecondary">
-                Pending Service Requests
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: "center" }}>
-              <ApprovedIcon color="success" sx={{ fontSize: 40, mb: 1 }} />
-              <Typography variant="h4">
-                {stats?.requisitions?.APPROVED || 0}
-              </Typography>
-              <Typography color="textSecondary">Approved This Month</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: "center" }}>
-              <RejectedIcon color="error" sx={{ fontSize: 40, mb: 1 }} />
-              <Typography variant="h4">
-                {stats?.requisitions?.REJECTED || 0}
-              </Typography>
-              <Typography color="textSecondary">Rejected This Month</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+      {/* Approval Stats using CSS Grid */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 3, mb: 4 }}>
+        <Card>
+          <CardContent sx={{ textAlign: 'center' }}>
+            <PendingIcon color="warning" sx={{ fontSize: 40, mb: 1 }} />
+            <Typography variant="h4">{stats?.pendingApprovals?.requisitions || 0}</Typography>
+            <Typography color="textSecondary">Pending Requisitions</Typography>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent sx={{ textAlign: 'center' }}>
+            <PendingIcon color="info" sx={{ fontSize: 40, mb: 1 }} />
+            <Typography variant="h4">{stats?.pendingApprovals?.serviceRequests || 0}</Typography>
+            <Typography color="textSecondary">Pending Service Requests</Typography>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent sx={{ textAlign: 'center' }}>
+            <ApprovedIcon color="success" sx={{ fontSize: 40, mb: 1 }} />
+            <Typography variant="h4">{stats?.requisitions?.APPROVED || 0}</Typography>
+            <Typography color="textSecondary">Approved This Month</Typography>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent sx={{ textAlign: 'center' }}>
+            <RejectedIcon color="error" sx={{ fontSize: 40, mb: 1 }} />
+            <Typography variant="h4">{stats?.requisitions?.REJECTED || 0}</Typography>
+            <Typography color="textSecondary">Rejected This Month</Typography>
+          </CardContent>
+        </Card>
+      </Box>
 
       <Grid container spacing={3}>
         {/* Pending Requisitions */}
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3 }}>
-            <Box
-              display="flex"
-              justifyContent="space-between"
-              alignItems="center"
-              mb={2}
-            >
-              <Typography variant="h6">Pending Requisitions</Typography>
-              <Chip
-                label={`${pendingRequisitions.length} pending`}
-                color="warning"
-                size="small"
-              />
+          <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}>
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+              <Typography variant="h6" sx={{ fontWeight: 700 }}>Pending Requisitions</Typography>
+              <Chip label={`${pendingRequisitions.length} pending`} color="warning" size="small" />
             </Box>
+            <Divider sx={{ mb: 2 }} />
 
             <List>
               {pendingRequisitions.slice(0, 5).map((req, index) => (
                 <ListItem key={index} divider>
                   <ListItemText
                     primary={req.title}
-                    secondary={`${req.department} • ${
-                      req.items
-                    } items • ${new Date(req.createdAt).toLocaleDateString()}`}
+                    secondary={`${req.department?.name || req.department || ''} • ${(req.items?.length || req.items || 0)} items • ${new Date(req.createdAt).toLocaleDateString()}`}
                   />
-                  <Button size="small" variant="outlined">
+                  <Button size="small" variant="outlined" onClick={() => navigate(`/requisitions/${req.id || req._id}`)}>
                     Review
                   </Button>
                 </ListItem>
@@ -127,7 +99,10 @@ const ProcurementDashboard = () => {
             )}
 
             {pendingRequisitions.length > 0 && (
-              <Button fullWidth variant="text" sx={{ mt: 2 }}>
+              <Divider sx={{ mt: 1, mb: 1 }} />
+            )}
+            {pendingRequisitions.length > 0 && (
+              <Button fullWidth variant="text" onClick={() => navigate('/requisitions')}>
                 View All Requisitions
               </Button>
             )}
@@ -136,31 +111,21 @@ const ProcurementDashboard = () => {
 
         {/* Pending Service Requests */}
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3 }}>
-            <Box
-              display="flex"
-              justifyContent="space-between"
-              alignItems="center"
-              mb={2}
-            >
-              <Typography variant="h6">Pending Service Requests</Typography>
-              <Chip
-                label={`${pendingServiceRequests.length} pending`}
-                color="info"
-                size="small"
-              />
+          <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}>
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+              <Typography variant="h6" sx={{ fontWeight: 700 }}>Pending Service Requests</Typography>
+              <Chip label={`${pendingServiceRequests.length} pending`} color="info" size="small" />
             </Box>
+            <Divider sx={{ mb: 2 }} />
 
             <List>
               {pendingServiceRequests.slice(0, 5).map((req, index) => (
                 <ListItem key={index} divider>
                   <ListItemText
                     primary={req.title}
-                    secondary={`${req.department} • ${new Date(
-                      req.createdAt
-                    ).toLocaleDateString()}`}
+                    secondary={`${req.department?.name || req.department || ''} • ${new Date(req.createdAt).toLocaleDateString()}`}
                   />
-                  <Button size="small" variant="outlined">
+                  <Button size="small" variant="outlined" onClick={() => navigate(`/service-requests/${req.id || req._id}`)}>
                     Review
                   </Button>
                 </ListItem>
@@ -174,7 +139,10 @@ const ProcurementDashboard = () => {
             )}
 
             {pendingServiceRequests.length > 0 && (
-              <Button fullWidth variant="text" sx={{ mt: 2 }}>
+              <Divider sx={{ mt: 1, mb: 1 }} />
+            )}
+            {pendingServiceRequests.length > 0 && (
+              <Button fullWidth variant="text" onClick={() => navigate('/service-requests')}>
                 View All Service Requests
               </Button>
             )}

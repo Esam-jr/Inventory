@@ -12,6 +12,11 @@ import {
   Grid,
   Snackbar,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
 } from "@mui/material";
 import {
   ArrowBack as BackIcon,
@@ -20,7 +25,7 @@ import {
   Delete as DeleteIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import { useRequisitionDetail } from "../../services/queries";
+import { useRequisitionDetail, useUpdateRequisitionStatus } from "../../services/queries";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import { useState } from "react";
 
@@ -29,14 +34,39 @@ const RequisitionDetail = () => {
   const navigate = useNavigate();
 
   const { data: requisition, isLoading, error } = useRequisitionDetail(id);
+  const updateStatus = useUpdateRequisitionStatus();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [snack, setSnack] = useState({ open: false, message: "", severity: "warning" });
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+
   const handleDelete = () => setConfirmOpen(true);
   const handleConfirmDelete = () => {
     setConfirmOpen(false);
     setSnack({ open: true, message: "Deletion is not supported by the backend.", severity: "warning" });
   };
   const closeSnack = () => setSnack((s) => ({ ...s, open: false }));
+
+  const handleApprove = async () => {
+    try {
+      await updateStatus.mutateAsync({ id, status: "APPROVED" });
+      setSnack({ open: true, message: "Requisition approved", severity: "success" });
+      navigate("/requisitions");
+    } catch (e) {
+      setSnack({ open: true, message: e?.response?.data?.error || e.message, severity: "error" });
+    }
+  };
+  const handleReject = async () => {
+    try {
+      await updateStatus.mutateAsync({ id, status: "REJECTED", reasonForRejection: rejectReason });
+      setRejectOpen(false);
+      setRejectReason("");
+      setSnack({ open: true, message: "Requisition rejected", severity: "success" });
+      navigate("/requisitions");
+    } catch (e) {
+      setSnack({ open: true, message: e?.response?.data?.error || e.message, severity: "error" });
+    }
+  };
 
   const getStatusColor = (status) => {
     const colors = {
@@ -99,7 +129,7 @@ const RequisitionDetail = () => {
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={8}>
-          <Paper sx={{ p: 3 }}>
+          <Paper sx={{ p: 3, mb: 2 }}>
             <Typography variant="h6" gutterBottom>
               {requisition.title}
             </Typography>
@@ -131,6 +161,16 @@ const RequisitionDetail = () => {
         </Grid>
 
         <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 3, mb: 2 }}>
+            <Typography variant="h6" gutterBottom>
+              Review Decision
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button variant="contained" color="success" onClick={handleApprove}>Approve</Button>
+              <Button variant="outlined" color="error" onClick={() => setRejectOpen(true)}>Reject</Button>
+            </Box>
+          </Paper>
+
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
               Requisition Information
@@ -188,6 +228,25 @@ const RequisitionDetail = () => {
         cancelText="Close"
         severity="warning"
       />
+      {/* Reject dialog */}
+      <Dialog open={rejectOpen} onClose={() => setRejectOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle>Reject Requisition</DialogTitle>
+        <DialogContent dividers>
+          <TextField
+            fullWidth
+            label="Reason for rejection"
+            multiline
+            rows={3}
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setRejectOpen(false)}>Cancel</Button>
+          <Button onClick={handleReject} variant="contained" color="error" disabled={!rejectReason.trim()}>Reject</Button>
+        </DialogActions>
+      </Dialog>
+
       <Snackbar
         open={snack.open}
         autoHideDuration={4000}
