@@ -20,7 +20,7 @@ import {
   Cancel as RejectedIcon,
   TrendingUp as StatsIcon,
 } from "@mui/icons-material";
-import { useDashboardStats, useRequisitions, useServiceRequests } from "../../services/queries";
+import { useDashboardStats, useRequisitions, useServiceRequests, useServiceRequestStats } from "../../services/queries";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import { useNavigate } from "react-router-dom";
 
@@ -29,6 +29,7 @@ const ProcurementDashboard = () => {
   const { data: stats, isLoading, error } = useDashboardStats();
   const { data: pendingRequisitions = [], isLoading: prLoading } = useRequisitions({ status: "PENDING" });
   const { data: pendingServiceRequests = [], isLoading: psrLoading } = useServiceRequests({ status: "PENDING" });
+  const { data: sReqStats } = useServiceRequestStats();
 
   if (isLoading || prLoading || psrLoading) return <LoadingSpinner />;
   if (error) return <div>Error loading dashboard data</div>;
@@ -56,14 +57,32 @@ const ProcurementDashboard = () => {
           <CardContent sx={{ textAlign: 'center' }}>
             <ApprovedIcon color="success" sx={{ fontSize: 40, mb: 1 }} />
             <Typography variant="h4">{stats?.requisitions?.APPROVED || 0}</Typography>
-            <Typography color="textSecondary">Approved This Month</Typography>
+            <Typography color="textSecondary">Requisitions Approved</Typography>
           </CardContent>
         </Card>
         <Card>
           <CardContent sx={{ textAlign: 'center' }}>
             <RejectedIcon color="error" sx={{ fontSize: 40, mb: 1 }} />
             <Typography variant="h4">{stats?.requisitions?.REJECTED || 0}</Typography>
-            <Typography color="textSecondary">Rejected This Month</Typography>
+            <Typography color="textSecondary">Requisitions Rejected</Typography>
+          </CardContent>
+        </Card>
+      </Box>
+
+      {/* Service Request Stats */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' }, gap: 3, mb: 4 }}>
+        <Card>
+          <CardContent sx={{ textAlign: 'center' }}>
+            <ApprovedIcon color="success" sx={{ fontSize: 40, mb: 1 }} />
+            <Typography variant="h4">{sReqStats?.APPROVED || 0}</Typography>
+            <Typography color="textSecondary">Service Requests Approved</Typography>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent sx={{ textAlign: 'center' }}>
+            <RejectedIcon color="error" sx={{ fontSize: 40, mb: 1 }} />
+            <Typography variant="h4">{sReqStats?.REJECTED || 0}</Typography>
+            <Typography color="textSecondary">Service Requests Rejected</Typography>
           </CardContent>
         </Card>
       </Box>

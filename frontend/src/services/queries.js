@@ -128,6 +128,7 @@ export const useFulfillRequisition = () => {
       queryClient.invalidateQueries(["requisitions"]);
       queryClient.invalidateQueries(["transactions"]);
       queryClient.invalidateQueries(["items"]);
+      queryClient.invalidateQueries(["dashboard-stats"]);
     },
   });
 };
@@ -138,6 +139,7 @@ export const useUpdateRequisitionStatus = () => {
       api.patch(`/requisitions/${id}/status`, { status, reasonForRejection }),
     onSuccess: () => {
       queryClient.invalidateQueries(["requisitions"]);
+      queryClient.invalidateQueries(["dashboard-stats"]);
     },
   });
 };
@@ -164,6 +166,8 @@ export const useUpdateServiceRequestStatus = () => {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries(["service-requests"]);
+      queryClient.invalidateQueries(["dashboard-stats"]);
+      queryClient.invalidateQueries(["service-request-stats"]);
     },
   });
 };
@@ -176,6 +180,17 @@ export const useServiceRequests = (params = {}) => {
       const response = await api.get("/service-requests", { params });
       return response.data;
     },
+  });
+};
+
+export const useServiceRequestStats = () => {
+  return useQuery({
+    queryKey: ["service-request-stats"],
+    queryFn: async () => {
+      const response = await api.get("/service-requests/stats");
+      return response.data;
+    },
+    refetchInterval: 300000,
   });
 };
 

@@ -22,6 +22,6 @@ router.get(
 
 router.post("/", authorize("ADMIN", "STOREKEEPER"), createItem);
 router.put("/:id", authorize("ADMIN", "STOREKEEPER"), updateItem);
-router.delete("/", authorize("ADMIN", "STOREKEEPER"), deleteItem);
+router.delete("/:id", authorize("ADMIN", "STOREKEEPER"), deleteItem);
 
 export default router;
