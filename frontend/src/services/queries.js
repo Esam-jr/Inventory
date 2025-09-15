@@ -45,8 +45,16 @@ export const useItem = (itemId) => {
   return useQuery({
     queryKey: ["items", itemId],
     queryFn: async () => {
-      const response = await api.get(`/items/${itemId}`);
-      return response.data;
+      try {
+        const response = await api.get(`/items/${itemId}`);
+        return response.data;
+      } catch (err) {
+        // Fallback: backend may not expose GET /items/:id; fetch all and find locally
+        const list = await api.get(`/items`);
+        const it = (list.data || []).find((x) => String(x.id || x._id) === String(itemId));
+        if (!it) throw err;
+        return it;
+      }
     },
     enabled: !!itemId,
   });

@@ -55,6 +55,12 @@ const menuItems = [
     roles: ["PROCUREMENT_OFFICER", "DEPARTMENT_HEAD", "AUDITOR"],
   },
   {
+    text: "Fulfill Requisitions",
+    icon: <RequisitionIcon />,
+    path: "/requisitions/fulfill",
+    roles: ["STOREKEEPER"],
+  },
+  {
     text: "Service Requests",
     icon: <ServiceRequestIcon />,
     path: "/service-requests",
