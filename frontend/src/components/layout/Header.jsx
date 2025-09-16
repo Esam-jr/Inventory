@@ -11,6 +11,7 @@ import {
   Chip,
   useTheme,
 } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import {
   Menu as MenuIcon,
   AccountCircle,
@@ -30,6 +31,7 @@ const Header = ({ onMenuClick }) => {
   const { user, logout } = useAuth();
   const { mode, toggleColorMode } = useThemeContext();
   const theme = useTheme();
+  const navigate = useNavigate();
 
   const handleProfileMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -163,14 +165,14 @@ const Header = ({ onMenuClick }) => {
 
             <Divider />
 
-            <MenuItem onClick={handleProfileMenuClose}>
+            <MenuItem
+              onClick={() => {
+                handleProfileMenuClose();
+                navigate("/profile");
+              }}
+            >
               <AccountCircle sx={{ mr: 1 }} />
               Profile
-            </MenuItem>
-
-            <MenuItem onClick={handleProfileMenuClose}>
-              <Settings sx={{ mr: 1 }} />
-              Settings
             </MenuItem>
 
             <Divider />

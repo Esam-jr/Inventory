@@ -29,6 +29,7 @@ const Layout = ({ children }) => {
         onClose={handleSidebarClose}
         isMobile={isMobile}
         userRole={user?.role}
+        user={user}
       />
 
       <Box
