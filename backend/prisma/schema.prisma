@@ -23,6 +23,7 @@ model User {
   serviceRequests          ServiceRequest[]
   processedServiceRequests ServiceRequest[] @relation("ProcessedServiceRequests")
   Transaction              Transaction[]
+  auditLogs                AuditLog[]
   department               Department?      @relation(fields: [departmentId], references: [id])
 }
 
@@ -142,4 +143,27 @@ enum RequisitionStatus {
   APPROVED
   REJECTED
   FULFILLED
+}
+
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  action     String   // e.g., "USER_CREATED", "REQUISITION_APPROVED", "AUTH_LOGIN"
+  entityType String   // e.g., "USER", "REQUISITION", "ITEM", "SERVICE_REQUEST"
+  entityId   String?  // ID of the affected entity
+  oldValues  String?  // JSON string of old values (for updates)
+  newValues  String?  // JSON string of new values
+  userId     Int?     // User who performed the action
+  ipAddress  String?  // IP address of the user
+  userAgent  String?  // User agent string
+  metadata   String?  // Additional metadata as JSON
+  status     String   @default("SUCCESS") // SUCCESS, FAILED, WARNING
+  timestamp  DateTime @default(now())
+  user       User?    @relation(fields: [userId], references: [id])
+
+  @@index([action])
+  @@index([entityType])
+  @@index([entityId])
+  @@index([userId])
+  @@index([timestamp])
+  @@index([action, entityType])
 }

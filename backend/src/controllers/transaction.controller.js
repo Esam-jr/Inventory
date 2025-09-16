@@ -1,5 +1,6 @@
 import prisma from "../lib/prisma.js";
 import { notificationTriggers } from "../services/notifications.service.js";
+import AuditLogService from "../services/auditLog.service.js";
 export const getTransactions = async (req, res) => {
   const { type, itemId, startDate, endDate, page = 1, limit = 50 } = req.query;
 
@@ -285,6 +286,27 @@ export const adjustStock = async (req, res) => {
       }
       return { transaction, updatedItem };
     });
+    
+    // Log inventory adjustment in audit trail
+    await AuditLogService.logInventory(
+      'STOCK_ADJUSTED',
+      parseInt(itemId),
+      req.user.id,
+      { quantity: item.quantity },
+      { 
+        quantity: result.updatedItem.quantity,
+        adjustment: quantity,
+        adjustmentType: type
+      },
+      {
+        ipAddress: req.ip,
+        itemName: item.name,
+        notes: notes || `Manual ${type.toLowerCase()} by user`,
+        transactionId: result.transaction.id,
+        previousQuantity: item.quantity,
+        newQuantity: result.updatedItem.quantity
+      }
+    );
 
     res.status(201).json({
       message: "Stock adjusted successfully",
