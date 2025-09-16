@@ -49,10 +49,16 @@ const menuItems = [
     roles: ["STOREKEEPER", "PROCUREMENT_OFFICER", "DEPARTMENT_HEAD", "AUDITOR"],
   },
   {
+    text: "My Requisitions",
+    icon: <RequisitionIcon />,
+    path: "/my-requisitions",
+    roles: ["DEPARTMENT_HEAD"],
+  },
+  {
     text: "Requisitions",
     icon: <RequisitionIcon />,
     path: "/requisitions",
-    roles: ["PROCUREMENT_OFFICER", "DEPARTMENT_HEAD", "AUDITOR"],
+    roles: ["PROCUREMENT_OFFICER", "AUDITOR"],
   },
   {
     text: "Fulfill Requisitions",
@@ -61,10 +67,16 @@ const menuItems = [
     roles: ["STOREKEEPER"],
   },
   {
+    text: "My Service Requests",
+    icon: <ServiceRequestIcon />,
+    path: "/my-service-requests",
+    roles: ["DEPARTMENT_HEAD"],
+  },
+  {
     text: "Service Requests",
     icon: <ServiceRequestIcon />,
     path: "/service-requests",
-    roles: ["PROCUREMENT_OFFICER", "DEPARTMENT_HEAD", "AUDITOR"],
+    roles: ["PROCUREMENT_OFFICER", "AUDITOR"],
   },
   {
     text: "Transactions",

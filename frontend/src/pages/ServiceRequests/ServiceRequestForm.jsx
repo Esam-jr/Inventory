@@ -13,9 +13,11 @@ import {
 } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCreateServiceRequest, useServiceRequestDetail } from "../../services/queries";
+import { useAuth } from "../../contexts/AuthContext";
 
 const ServiceRequestForm = ({ editMode = false }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { id } = useParams();
   const [formData, setFormData] = useState({
     title: "",
@@ -55,7 +57,7 @@ const ServiceRequestForm = ({ editMode = false }) => {
     try {
       const payload = { title: formData.title, description: formData.description };
       await createReq.mutateAsync(payload);
-      navigate("/service-requests");
+      navigate(user?.role === "DEPARTMENT_HEAD" ? "/my-service-requests" : "/service-requests");
     } catch (e) {
       console.error(e);
     }
@@ -64,7 +66,7 @@ const ServiceRequestForm = ({ editMode = false }) => {
   return (
     <Box>
       <Box sx={{ display: "flex", alignItems: "center", mb: 3, gap: 2 }}>
-        <Button startIcon={<BackIcon />} onClick={() => navigate("/service-requests")} variant="outlined">
+        <Button startIcon={<BackIcon />} onClick={() => navigate(user?.role === "DEPARTMENT_HEAD" ? "/my-service-requests" : "/service-requests")} variant="outlined">
           Back
         </Button>
         <Typography variant="h4" component="h1" fontWeight="bold">

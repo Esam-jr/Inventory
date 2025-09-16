@@ -20,9 +20,11 @@ import {
 } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
 import { useItems, useCreateRequisition, useUpdateRequisition, useRequisitionDetail } from "../../services/queries";
+import { useAuth } from "../../contexts/AuthContext";
 
 const RequisitionForm = ({ editMode = false, requisition = null }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { id } = useParams();
   const [formData, setFormData] = useState({
     title: requisition?.title || "",
@@ -88,7 +90,7 @@ const RequisitionForm = ({ editMode = false, requisition = null }) => {
       } else {
         await createRequisition.mutateAsync(payload);
       }
-      navigate("/requisitions");
+      navigate(user?.role === "DEPARTMENT_HEAD" ? "/my-requisitions" : "/requisitions");
     } catch (e) {
       // Error presentation kept minimal here; can add Snackbar
       console.error(e);
@@ -102,7 +104,7 @@ const RequisitionForm = ({ editMode = false, requisition = null }) => {
       <Box sx={{ display: "flex", alignItems: "center", mb: 3, gap: 2 }}>
         <Button
           startIcon={<BackIcon />}
-          onClick={() => navigate("/requisitions")}
+          onClick={() => navigate(user?.role === "DEPARTMENT_HEAD" ? "/my-requisitions" : "/requisitions")}
           variant="outlined"
         >
           Back

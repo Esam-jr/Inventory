@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Grid,
   Paper,
@@ -13,8 +13,6 @@ import {
   Chip,
   Avatar,
   Divider,
-  Snackbar,
-  Alert,
 } from "@mui/material";
 import {
   RequestQuote as RequisitionIcon,
@@ -23,8 +21,6 @@ import {
   CheckCircle as ApprovedIcon,
   Schedule as PendingIcon,
 } from "@mui/icons-material";
-import { Delete as DeleteIcon } from "@mui/icons-material";
-import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import { useDashboardStats, useRequisitions, useServiceRequests } from "../../services/queries";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import { useNavigate } from "react-router-dom";
@@ -37,32 +33,30 @@ const DepartmentHeadDashboard = () => {
   const { data: reqs, isLoading: reqLoading, error: reqError } = useRequisitions({});
   const { data: sreqs, isLoading: sreqLoading, error: sreqError } = useServiceRequests({});
 
-  if (statsLoading || reqLoading || sreqLoading) return <LoadingSpinner />;
-  if (error) return <div>Error loading dashboard data</div>;
-
   const currentUserId = user?.id || user?._id || user?.userId;
   const currentUserEmail = user?.email;
-  const matchesUser = (u) => {
-    const uid = u?.id || u?._id || u?.userId;
-    const email = u?.email;
-    return (
-      (currentUserId && String(uid) === String(currentUserId)) ||
-      (currentUserEmail && email && email.toLowerCase() === currentUserEmail.toLowerCase())
-    );
-  };
+  
+  const matchesUser = useMemo(() => {
+    return (u) => {
+      const uid = u?.id || u?._id || u?.userId;
+      const email = u?.email;
+      return (
+        (currentUserId && String(uid) === String(currentUserId)) ||
+        (currentUserEmail && email && email.toLowerCase() === currentUserEmail.toLowerCase())
+      );
+    };
+  }, [currentUserId, currentUserEmail]);
 
-  const myRequisitions = (reqs || []).filter((r) => matchesUser(r.createdBy));
-  const myServiceRequests = (sreqs || []).filter((r) => matchesUser(r.createdBy));
+  const myRequisitions = useMemo(() => {
+    return (reqs || []).filter((r) => matchesUser(r.createdBy));
+  }, [reqs, matchesUser]);
 
-  // Delete UI (backend does not support deletion; show info)
-  const [confirm, setConfirm] = useState({ open: false, target: null, type: null });
-  const [snack, setSnack] = useState({ open: false, message: "", severity: "info" });
-  const requestDelete = (type, item) => setConfirm({ open: true, target: item, type });
-  const handleConfirmDelete = () => {
-    setConfirm({ open: false, target: null, type: null });
-    setSnack({ open: true, message: "Deletion is not supported by the backend.", severity: "warning" });
-  };
-  const closeSnack = () => setSnack((s) => ({ ...s, open: false }));
+  const myServiceRequests = useMemo(() => {
+    return (sreqs || []).filter((r) => matchesUser(r.createdBy));
+  }, [sreqs, matchesUser]);
+
+  if (statsLoading || reqLoading || sreqLoading) return <LoadingSpinner />;
+  if (error) return <div>Error loading dashboard data</div>;
 
   return (
     <Box>
@@ -139,35 +133,24 @@ const DepartmentHeadDashboard = () => {
             )}
             <List>
               {myRequisitions.slice(0, 3).map((req, index) => (
-                <ListItem key={index} divider onClick={() => navigate(`/requisitions/${req.id || req._id}`)} sx={{ cursor: "pointer" }}>
+                <ListItem key={req.id || req._id || index} divider onClick={() => navigate(`/requisitions/${req.id || req._id}`)} sx={{ cursor: "pointer" }}>
                   <ListItemText
                     primary={req.title}
                     secondary={`${req.items?.length || 0} items • ${new Date(
                       req.createdAt
                     ).toLocaleDateString()}`}
                   />
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Button
-                      size="small"
-                      color="error"
-                      variant="outlined"
-                      startIcon={<DeleteIcon />}
-                      onClick={(e) => { e.stopPropagation(); requestDelete('requisition', req); }}
-                    >
-                      Delete
-                    </Button>
-                    <Chip
-                      label={req.status}
-                      size="small"
-                      color={
-                        req.status === "APPROVED"
-                          ? "success"
-                          : req.status === "PENDING"
-                          ? "warning"
-                          : "default"
-                      }
-                    />
-                  </Box>
+                  <Chip
+                    label={req.status}
+                    size="small"
+                    color={
+                      req.status === "APPROVED"
+                        ? "success"
+                        : req.status === "PENDING"
+                        ? "warning"
+                        : "default"
+                    }
+                  />
                 </ListItem>
               ))}
               {myRequisitions.length === 0 && (
@@ -191,33 +174,22 @@ const DepartmentHeadDashboard = () => {
             )}
             <List>
               {myServiceRequests.slice(0, 3).map((req, index) => (
-                <ListItem key={index} divider onClick={() => navigate(`/service-requests/${req.id || req._id}`)} sx={{ cursor: "pointer" }}>
+                <ListItem key={req.id || req._id || index} divider onClick={() => navigate(`/service-requests/${req.id || req._id}`)} sx={{ cursor: "pointer" }}>
                   <ListItemText
                     primary={req.title}
                     secondary={new Date(req.createdAt).toLocaleDateString()}
                   />
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Button
-                      size="small"
-                      color="error"
-                      variant="outlined"
-                      startIcon={<DeleteIcon />}
-                      onClick={(e) => { e.stopPropagation(); requestDelete('service', req); }}
-                    >
-                      Delete
-                    </Button>
-                    <Chip
-                      label={req.status}
-                      size="small"
-                      color={
-                        req.status === "APPROVED"
-                          ? "success"
-                          : req.status === "PENDING"
-                          ? "warning"
-                          : "default"
-                      }
-                    />
-                  </Box>
+                  <Chip
+                    label={req.status}
+                    size="small"
+                    color={
+                      req.status === "APPROVED"
+                        ? "success"
+                        : req.status === "PENDING"
+                        ? "warning"
+                        : "default"
+                    }
+                  />
                 </ListItem>
               ))}
               {myServiceRequests.length === 0 && (
@@ -275,27 +247,6 @@ const DepartmentHeadDashboard = () => {
           </Paper>
         </Grid>
       </Grid>
-    {/* Global Confirm and Snackbar */}
-      <ConfirmDialog
-        open={confirm.open}
-        onClose={() => setConfirm({ open: false, target: null, type: null })}
-        onConfirm={handleConfirmDelete}
-        title="Delete Request"
-        message="Deletion is not supported by the backend at the moment."
-        confirmText="OK"
-        cancelText="Close"
-        severity="warning"
-      />
-      <Snackbar
-        open={snack.open}
-        autoHideDuration={4000}
-        onClose={closeSnack}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert onClose={closeSnack} severity={snack.severity} variant="filled">
-          {snack.message}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 };

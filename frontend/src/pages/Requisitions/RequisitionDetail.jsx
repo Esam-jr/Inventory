@@ -53,7 +53,7 @@ const RequisitionDetail = () => {
     try {
       await updateStatus.mutateAsync({ id, status: "APPROVED" });
       setSnack({ open: true, message: "Requisition approved", severity: "success" });
-      navigate("/requisitions");
+      navigate(user?.role === "DEPARTMENT_HEAD" ? "/my-requisitions" : "/requisitions");
     } catch (e) {
       setSnack({ open: true, message: e?.response?.data?.error || e.message, severity: "error" });
     }
@@ -64,7 +64,7 @@ const RequisitionDetail = () => {
       setRejectOpen(false);
       setRejectReason("");
       setSnack({ open: true, message: "Requisition rejected", severity: "success" });
-      navigate("/requisitions");
+      navigate(user?.role === "DEPARTMENT_HEAD" ? "/my-requisitions" : "/requisitions");
     } catch (e) {
       setSnack({ open: true, message: e?.response?.data?.error || e.message, severity: "error" });
     }
@@ -105,7 +105,7 @@ const RequisitionDetail = () => {
       <Box sx={{ display: "flex", alignItems: "center", mb: 3, gap: 2 }}>
         <Button
           startIcon={<BackIcon />}
-          onClick={() => navigate("/requisitions")}
+          onClick={() => navigate(user?.role === "DEPARTMENT_HEAD" ? "/my-requisitions" : "/requisitions")}
           variant="outlined"
         >
           Back to List
@@ -118,7 +118,7 @@ const RequisitionDetail = () => {
           color={getStatusColor(requisition.status)}
           sx={{ ml: "auto" }}
         />
-        {user?.role !== "AUDITOR" && (
+        {(user?.role === "PROCUREMENT_OFFICER" || user?.role === "ADMIN") && (
           <Button
             variant="outlined"
             color="error"
@@ -165,7 +165,7 @@ const RequisitionDetail = () => {
         </Grid>
 
         <Grid item xs={12} md={4}>
-          {user?.role !== "AUDITOR" && (
+          {user?.role === "PROCUREMENT_OFFICER" && requisition.status === "PENDING" && (
             <Paper sx={{ p: 3, mb: 2 }}>
               <Typography variant="h6" gutterBottom>
                 Review Decision

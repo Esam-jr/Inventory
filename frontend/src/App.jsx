@@ -32,6 +32,8 @@ import TransactionList from "./pages/Transactions/TransactionList";
 import ServiceRequestList from "./pages/ServiceRequests/ServiceRequestList";
 import ServiceRequestForm from "./pages/ServiceRequests/ServiceRequestForm";
 import ServiceRequestDetail from "./pages/ServiceRequests/ServiceRequestDetail";
+import DepartmentHeadRequisitions from "./pages/Requisitions/DepartmentHeadRequisitions";
+import DepartmentHeadServiceRequests from "./pages/ServiceRequests/DepartmentHeadServiceRequests";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -88,6 +90,14 @@ function AppContent() {
                     />
                     <Route path="/requisitions" element={<RequisitionList />} />
                     <Route
+                      path="/my-requisitions"
+                      element={
+                        <ProtectedRoute requiredRoles={["DEPARTMENT_HEAD"]}>
+                          <DepartmentHeadRequisitions />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
                       path="/requisitions/new"
                       element={<RequisitionForm />}
                     />
@@ -119,8 +129,16 @@ function AppContent() {
                     <Route path="/reports/:id" element={<ReportView />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/transactions" element={<TransactionList />} />
-                    {/* Service Requests - stubs for now */}
+                    {/* Service Requests */}
                     <Route path="/service-requests" element={<ServiceRequestList />} />
+                    <Route
+                      path="/my-service-requests"
+                      element={
+                        <ProtectedRoute requiredRoles={["DEPARTMENT_HEAD"]}>
+                          <DepartmentHeadServiceRequests />
+                        </ProtectedRoute>
+                      }
+                    />
                     <Route path="/service-requests/new" element={<ServiceRequestForm />} />
                     <Route path="/service-requests/:id" element={<ServiceRequestDetail />} />
                     <Route path="/" element={<Navigate to="/dashboard" />} />

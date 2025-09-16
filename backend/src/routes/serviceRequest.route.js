@@ -5,6 +5,7 @@ import {
   getServiceRequestById,
   updateServiceRequestStatus,
   getServiceRequestStats,
+  deleteServiceRequest,
 } from "../controllers/serviceRequest.controller.js";
 import { authenticateToken, authorize } from "../middleware/auth.js";
 
@@ -38,6 +39,12 @@ router.patch(
   "/:id/status",
   authorize("PROCUREMENT_OFFICER"),
   updateServiceRequestStatus
+);
+
+router.delete(
+  "/:id",
+  authorize("DEPARTMENT_HEAD", "PROCUREMENT_OFFICER", "ADMIN"),
+  deleteServiceRequest
 );
 
 export default router;

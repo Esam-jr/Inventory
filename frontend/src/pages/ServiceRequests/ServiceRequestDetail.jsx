@@ -49,7 +49,7 @@ const ServiceRequestDetail = () => {
     try {
       await updateStatus.mutateAsync({ id, status: "APPROVED" });
       setSnack({ open: true, message: "Service request approved", severity: "success" });
-      navigate("/service-requests");
+      navigate(user?.role === "DEPARTMENT_HEAD" ? "/my-service-requests" : "/service-requests");
     } catch (e) {
       setSnack({ open: true, message: e?.response?.data?.error || e.message, severity: "error" });
     }
@@ -61,7 +61,7 @@ const ServiceRequestDetail = () => {
       setRejectOpen(false);
       setRejectReason("");
       setSnack({ open: true, message: "Service request rejected", severity: "success" });
-      navigate("/service-requests");
+      navigate(user?.role === "DEPARTMENT_HEAD" ? "/my-service-requests" : "/service-requests");
     } catch (e) {
       setSnack({ open: true, message: e?.response?.data?.error || e.message, severity: "error" });
     }
@@ -84,14 +84,14 @@ const ServiceRequestDetail = () => {
   return (
     <Box>
       <Box sx={{ display: "flex", alignItems: "center", mb: 3, gap: 2 }}>
-        <Button startIcon={<BackIcon />} onClick={() => navigate("/service-requests")} variant="outlined">
+        <Button startIcon={<BackIcon />} onClick={() => navigate(user?.role === "DEPARTMENT_HEAD" ? "/my-service-requests" : "/service-requests")} variant="outlined">
           Back to List
         </Button>
         <Typography variant="h4" component="h1" fontWeight="bold">
           Service Request Details
         </Typography>
         <Chip label={request.status} color={statusColor(request.status)} sx={{ ml: "auto" }} />
-        {user?.role !== "AUDITOR" && (
+        {(user?.role === "PROCUREMENT_OFFICER" || user?.role === "ADMIN") && (
           <Button variant="outlined" color="error" startIcon={<DeleteIcon />} onClick={handleDelete} sx={{ ml: 1 }}>
             Delete
           </Button>
@@ -117,7 +117,7 @@ const ServiceRequestDetail = () => {
 
         {/* Right: Review and info */}
         <Grid item xs={12} md={4}>
-          {user?.role !== "AUDITOR" && (
+          {user?.role === "PROCUREMENT_OFFICER" && request.status === "PENDING" && (
             <Paper sx={{ p: 3, mb: 2 }}>
               <Typography variant="h6" gutterBottom>
                 Review Decision
