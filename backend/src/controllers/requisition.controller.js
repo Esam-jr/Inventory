@@ -1,5 +1,6 @@
 import prisma from "../lib/prisma.js";
 import { notificationTriggers } from "../services/notifications.service.js";
+import AuditLogService from "../services/auditLog.service.js";
 
 export const createRequisition = async (req, res) => {
   const { title, description, items } = req.body;
@@ -59,6 +60,26 @@ export const createRequisition = async (req, res) => {
       },
     });
     await notificationTriggers.onNewRequisition(requisition);
+    
+    // Log requisition creation
+    await AuditLogService.logRequisition(
+      'CREATED',
+      requisition.id,
+      req.user.id,
+      null,
+      {
+        title: requisition.title,
+        description: requisition.description,
+        department: requisition.department.name,
+        itemCount: requisition.items.length,
+        items: requisition.items.map(item => ({
+          itemId: item.itemId,
+          itemName: item.item.name,
+          quantity: item.quantity
+        }))
+      },
+      { ipAddress: req.ip }
+    );
 
     res.status(201).json(requisition);
   } catch (error) {
@@ -135,6 +156,80 @@ export const getRequisitions = async (req, res) => {
   } catch (error) {
     console.error("Get requisitions error:", error);
     res.status(500).json({ error: "Failed to fetch requisitions" });
+  }
+};
+
+export const deleteRequisition = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // First, get the requisition to check permissions and status
+    const requisition = await prisma.requisition.findUnique({
+      where: { id: parseInt(id) },
+      include: {
+        department: { select: { name: true } },
+        items: {
+          include: {
+            item: { select: { name: true } }
+          }
+        }
+      }
+    });
+
+    if (!requisition) {
+      return res.status(404).json({ error: "Requisition not found" });
+    }
+
+    // Check if user is the creator or has appropriate permissions
+    if (req.user.role === "DEPARTMENT_HEAD") {
+      if (requisition.createdById !== req.user.id) {
+        return res.status(403).json({ error: "You can only delete your own requisitions" });
+      }
+    } else if (!["ADMIN", "PROCUREMENT_OFFICER"].includes(req.user.role)) {
+      return res.status(403).json({ error: "Insufficient permissions" });
+    }
+
+    // Only allow deletion of PENDING requisitions
+    if (requisition.status !== "PENDING") {
+      return res.status(400).json({ 
+        error: `Cannot delete ${requisition.status.toLowerCase()} requisitions` 
+      });
+    }
+
+    // Delete requisition items first (due to foreign key constraints)
+    await prisma.requisitionItem.deleteMany({
+      where: { requisitionId: parseInt(id) }
+    });
+
+    // Delete the requisition
+    await prisma.requisition.delete({
+      where: { id: parseInt(id) }
+    });
+
+    // Log requisition deletion
+    await AuditLogService.logRequisition(
+      'DELETED',
+      parseInt(id),
+      req.user.id,
+      null,
+      {
+        title: requisition.title,
+        description: requisition.description,
+        department: requisition.department.name,
+        itemCount: requisition.items.length,
+        items: requisition.items.map(item => ({
+          itemId: item.itemId,
+          itemName: item.item.name,
+          quantity: item.quantity
+        }))
+      },
+      { ipAddress: req.ip }
+    );
+
+    res.json({ message: "Requisition deleted successfully" });
+  } catch (error) {
+    console.error("Delete requisition error:", error);
+    res.status(500).json({ error: "Failed to delete requisition" });
   }
 };
 
@@ -276,6 +371,30 @@ export const updateRequisitionStatus = async (req, res) => {
       },
     });
     await notificationTriggers.onRequisitionStatusChange(updatedRequisition);
+    
+    // Log requisition status change
+    await AuditLogService.logRequisition(
+      status === 'APPROVED' ? 'APPROVED' : 'REJECTED',
+      parseInt(id),
+      req.user.id,
+      { status: existingRequisition.status },
+      {
+        status,
+        reasonForRejection: reasonForRejection || null,
+        processedAt: new Date(),
+        processedBy: {
+          id: req.user.id,
+          name: `${updatedRequisition.processedBy.firstName} ${updatedRequisition.processedBy.lastName}`,
+          role: req.user.role
+        }
+      },
+      {
+        ipAddress: req.ip,
+        previousStatus: existingRequisition.status,
+        title: updatedRequisition.title,
+        department: updatedRequisition.department.name
+      }
+    );
 
     res.json({
       message: `Requisition ${status.toLowerCase()} successfully`,
@@ -437,6 +556,34 @@ export const fulfillRequisition = async (req, res) => {
       {
         maxWait: 10000,
         timeout: 15000,
+      }
+    );
+    
+    // Log requisition fulfillment
+    await AuditLogService.logRequisition(
+      'FULFILLED',
+      requisition.id,
+      req.user.id,
+      { status: 'APPROVED' },
+      {
+        status: 'FULFILLED',
+        fulfilledAt: new Date(),
+        fulfilledBy: {
+          id: req.user.id,
+          role: req.user.role
+        },
+        transactionIds: result.transactions.map(t => t.id),
+        itemsIssued: requisition.items.map(item => ({
+          itemId: item.itemId,
+          itemName: item.item.name,
+          quantityIssued: item.quantity,
+          unit: item.item.unit
+        }))
+      },
+      {
+        ipAddress: req.ip,
+        title: result.requisition.title,
+        department: result.requisition.department.name
       }
     );
 

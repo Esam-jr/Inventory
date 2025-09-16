@@ -1,5 +1,6 @@
 import prisma from "../lib/prisma.js";
 import { notificationTriggers } from "../services/notifications.service.js";
+import AuditLogService from "../services/auditLog.service.js";
 
 export const createServiceRequest = async (req, res) => {
   const { title, description } = req.body;
@@ -29,6 +30,20 @@ export const createServiceRequest = async (req, res) => {
         },
       },
     });
+    
+    // Log service request creation
+    await AuditLogService.logServiceRequest(
+      'CREATED',
+      serviceRequest.id,
+      req.user.id,
+      null,
+      {
+        title: serviceRequest.title,
+        description: serviceRequest.description,
+        department: serviceRequest.department.name
+      },
+      { ipAddress: req.ip }
+    );
 
     res.status(201).json(serviceRequest);
   } catch (error) {
@@ -93,6 +108,64 @@ export const getServiceRequests = async (req, res) => {
   } catch (error) {
     console.error("Get service requests error:", error);
     res.status(500).json({ error: "Failed to fetch service requests" });
+  }
+};
+
+export const deleteServiceRequest = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // First, get the service request to check permissions and status
+    const serviceRequest = await prisma.serviceRequest.findUnique({
+      where: { id: parseInt(id) },
+      include: {
+        department: { select: { name: true } }
+      }
+    });
+
+    if (!serviceRequest) {
+      return res.status(404).json({ error: "Service request not found" });
+    }
+
+    // Check if user is the creator or has appropriate permissions
+    if (req.user.role === "DEPARTMENT_HEAD") {
+      if (serviceRequest.createdById !== req.user.id) {
+        return res.status(403).json({ error: "You can only delete your own service requests" });
+      }
+    } else if (!["ADMIN", "PROCUREMENT_OFFICER"].includes(req.user.role)) {
+      return res.status(403).json({ error: "Insufficient permissions" });
+    }
+
+    // Only allow deletion of PENDING service requests
+    if (serviceRequest.status !== "PENDING") {
+      return res.status(400).json({ 
+        error: `Cannot delete ${serviceRequest.status.toLowerCase()} service requests` 
+      });
+    }
+
+    // Delete the service request
+    await prisma.serviceRequest.delete({
+      where: { id: parseInt(id) }
+    });
+
+    // Log service request deletion
+    await AuditLogService.logServiceRequest(
+      'DELETED',
+      parseInt(id),
+      req.user.id,
+      null,
+      {
+        title: serviceRequest.title,
+        description: serviceRequest.description,
+        department: serviceRequest.department.name
+      },
+      { ipAddress: req.ip }
+    );
+
+    res.json({ message: "Service request deleted successfully" });
+  } catch (error) {
+    console.error("Delete service request error:", error);
+    res.status(500).json({ error: "Failed to delete service request" });
   }
 };
 
@@ -214,6 +287,30 @@ export const updateServiceRequestStatus = async (req, res) => {
     });
     await notificationTriggers.onServiceRequestStatusChange(
       updatedServiceRequest
+    );
+    
+    // Log service request status change
+    await AuditLogService.logServiceRequest(
+      status === 'APPROVED' ? 'APPROVED' : 'REJECTED',
+      parseInt(id),
+      req.user.id,
+      { status: existingServiceRequest.status },
+      {
+        status,
+        reasonForRejection: reasonForRejection || null,
+        processedAt: new Date(),
+        processedBy: {
+          id: req.user.id,
+          name: `${updatedServiceRequest.processedBy.firstName} ${updatedServiceRequest.processedBy.lastName}`,
+          role: req.user.role
+        }
+      },
+      {
+        ipAddress: req.ip,
+        previousStatus: existingServiceRequest.status,
+        title: updatedServiceRequest.title,
+        department: updatedServiceRequest.department.name
+      }
     );
 
     res.json({
