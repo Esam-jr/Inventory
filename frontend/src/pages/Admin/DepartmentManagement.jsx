@@ -149,18 +149,32 @@ const DepartmentManagement = () => {
   };
 
   const CustomToolbar = () => (
-    <GridToolbarContainer sx={{ p: 2 }}>
-      <Box sx={{ display: "flex", gap: 1, alignItems: "center", flex: 1 }}>
+    <GridToolbarContainer sx={{ p: 2, borderBottom: "1px solid #e0e0e0" }}>
+      <Box sx={{ display: "flex", gap: 2, alignItems: "center", flex: 1 }}>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={openCreateDialog}
           sx={{
-            background: "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
+            background: "linear-gradient(45deg, #4CAF50 30%, #66BB6A 90%)",
+            color: "white",
+            fontWeight: 600,
+            px: 3,
+            py: 1,
+            boxShadow: "0 3px 8px rgba(76, 175, 80, 0.3)",
+            "&:hover": {
+              background: "linear-gradient(45deg, #388E3C 30%, #4CAF50 90%)",
+              boxShadow: "0 4px 12px rgba(76, 175, 80, 0.4)",
+              transform: "translateY(-1px)",
+            },
+            transition: "all 0.3s ease",
           }}
         >
-          Add Department
+          Add New Department
         </Button>
+        <Typography variant="body2" color="text.secondary" sx={{ ml: 2 }}>
+          Total: {departments?.length || 0} departments
+        </Typography>
       </Box>
       <Box sx={{ display: "flex", gap: 1 }}>
         <GridToolbarFilterButton />
@@ -321,23 +335,47 @@ const DepartmentManagement = () => {
     <Box sx={{ p: 3 }}>
       {/* Header */}
       <Box sx={{ mb: 3 }}>
-        <Typography
-          variant="h4"
-          component="h1"
-          sx={{
-            fontWeight: 700,
-            background: "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
-            backgroundClip: "text",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            mb: 1,
-          }}
-        >
-          Department Management
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Manage organizational departments and their associated users
-        </Typography>
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 2 }}>
+          <Box>
+            <Typography
+              variant="h4"
+              component="h1"
+              sx={{
+                fontWeight: 700,
+                background: "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
+                backgroundClip: "text",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                mb: 1,
+              }}
+            >
+              Department Management
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              Manage organizational departments and their associated users
+            </Typography>
+          </Box>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={openCreateDialog}
+            size="large"
+            sx={{
+              background: "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
+              boxShadow: "0 4px 12px rgba(33, 150, 243, 0.3)",
+              "&:hover": {
+                background: "linear-gradient(45deg, #1976d2 30%, #1e88e5 90%)",
+                boxShadow: "0 6px 16px rgba(33, 150, 243, 0.4)",
+                transform: "translateY(-1px)",
+              },
+              transition: "all 0.3s ease",
+              minWidth: "200px",
+              height: "48px",
+            }}
+          >
+            Create New Department
+          </Button>
+        </Box>
       </Box>
 
       {/* Data Grid */}
