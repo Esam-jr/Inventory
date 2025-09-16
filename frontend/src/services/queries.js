@@ -144,6 +144,17 @@ export const useUpdateRequisitionStatus = () => {
   });
 };
 
+export const useDeleteRequisition = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (requisitionId) => api.delete(`/requisitions/${requisitionId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["requisitions"]);
+      queryClient.invalidateQueries(["dashboard-stats"]);
+    },
+  });
+};
+
 // SERVICE REQUEST MUTATIONS
 export const useCreateServiceRequest = () => {
   const queryClient = useQueryClient();
@@ -164,6 +175,18 @@ export const useUpdateServiceRequestStatus = () => {
         status,
         reasonForRejection,
       }),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["service-requests"]);
+      queryClient.invalidateQueries(["dashboard-stats"]);
+      queryClient.invalidateQueries(["service-request-stats"]);
+    },
+  });
+};
+
+export const useDeleteServiceRequest = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (serviceRequestId) => api.delete(`/service-requests/${serviceRequestId}`),
     onSuccess: () => {
       queryClient.invalidateQueries(["service-requests"]);
       queryClient.invalidateQueries(["dashboard-stats"]);
@@ -340,6 +363,62 @@ export const useDeleteDepartment = () => {
   });
 };
 
+// AUDIT LOG QUERIES
+export const useAuditLogs = (params = {}) => {
+  return useQuery({
+    queryKey: ["audit-logs", params],
+    queryFn: async () => {
+      const response = await api.get("/audit-logs", { params });
+      return response.data;
+    },
+    refetchInterval: 60000, // Refresh every minute for audit logs
+  });
+};
+
+export const useAuditStats = (params = {}) => {
+  return useQuery({
+    queryKey: ["audit-stats", params],
+    queryFn: async () => {
+      const response = await api.get("/audit-logs/stats", { params });
+      return response.data;
+    },
+    refetchInterval: 300000, // Refresh every 5 minutes
+  });
+};
+
+export const useAuditLogDetail = (auditLogId) => {
+  return useQuery({
+    queryKey: ["audit-logs", auditLogId],
+    queryFn: async () => {
+      const response = await api.get(`/audit-logs/${auditLogId}`);
+      return response.data;
+    },
+    enabled: !!auditLogId,
+  });
+};
+
+export const useAuditTrail = (entityType, entityId) => {
+  return useQuery({
+    queryKey: ["audit-trail", entityType, entityId],
+    queryFn: async () => {
+      const response = await api.get(`/audit-logs/trail/${entityType}/${entityId}`);
+      return response.data;
+    },
+    enabled: !!(entityType && entityId),
+  });
+};
+
+export const useUserActivity = (userId, params = {}) => {
+  return useQuery({
+    queryKey: ["user-activity", userId, params],
+    queryFn: async () => {
+      const response = await api.get(`/audit-logs/user/${userId}`, { params });
+      return response.data;
+    },
+    enabled: !!userId,
+  });
+};
+
 // AUDIT & REPORTING QUERIES
 export const useAuditReport = (params = {}) => {
   return useQuery({
@@ -411,9 +490,9 @@ export const useDownloadReport = () => {
 };
 
 // Advanced audit statistics
-export const useAuditStats = (params = {}) => {
+export const useAdvancedAuditStats = (params = {}) => {
   return useQuery({
-    queryKey: ["audit-stats", params],
+    queryKey: ["advanced-audit-stats", params],
     queryFn: async () => {
       const [auditData, transactionStats] = await Promise.all([
         api.get("/reports/audit", { params: { ...params, limit: 1000 } }),
