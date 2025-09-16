@@ -27,11 +27,13 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useRequisitionDetail, useUpdateRequisitionStatus } from "../../services/queries";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
+import { useAuth } from "../../contexts/AuthContext";
 import { useState } from "react";
 
 const RequisitionDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const { data: requisition, isLoading, error } = useRequisitionDetail(id);
   const updateStatus = useUpdateRequisitionStatus();
@@ -116,15 +118,17 @@ const RequisitionDetail = () => {
           color={getStatusColor(requisition.status)}
           sx={{ ml: "auto" }}
         />
-        <Button
-          variant="outlined"
-          color="error"
-          startIcon={<DeleteIcon />}
-          onClick={handleDelete}
-          sx={{ ml: 2 }}
-        >
-          Delete
-        </Button>
+        {user?.role !== "AUDITOR" && (
+          <Button
+            variant="outlined"
+            color="error"
+            startIcon={<DeleteIcon />}
+            onClick={handleDelete}
+            sx={{ ml: 2 }}
+          >
+            Delete
+          </Button>
+        )}
       </Box>
 
       <Grid container spacing={3}>
@@ -161,15 +165,17 @@ const RequisitionDetail = () => {
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Paper sx={{ p: 3, mb: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              Review Decision
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <Button variant="contained" color="success" onClick={handleApprove}>Approve</Button>
-              <Button variant="outlined" color="error" onClick={() => setRejectOpen(true)}>Reject</Button>
-            </Box>
-          </Paper>
+          {user?.role !== "AUDITOR" && (
+            <Paper sx={{ p: 3, mb: 2 }}>
+              <Typography variant="h6" gutterBottom>
+                Review Decision
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Button variant="contained" color="success" onClick={handleApprove}>Approve</Button>
+                <Button variant="outlined" color="error" onClick={() => setRejectOpen(true)}>Reject</Button>
+              </Box>
+            </Paper>
+          )}
 
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>

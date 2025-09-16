@@ -339,3 +339,113 @@ export const useDeleteDepartment = () => {
     },
   });
 };
+
+// AUDIT & REPORTING QUERIES
+export const useAuditReport = (params = {}) => {
+  return useQuery({
+    queryKey: ["audit-report", params],
+    queryFn: async () => {
+      const response = await api.get("/reports/audit", { params });
+      return response.data;
+    },
+    enabled: !!Object.keys(params).length || params.autoLoad,
+  });
+};
+
+export const useInventoryReport = (params = {}) => {
+  return useQuery({
+    queryKey: ["inventory-report", params],
+    queryFn: async () => {
+      const response = await api.get("/reports/inventory", { params });
+      return response.data;
+    },
+    enabled: !!Object.keys(params).length || params.autoLoad,
+  });
+};
+
+export const useRequisitionReport = (params = {}) => {
+  return useQuery({
+    queryKey: ["requisition-report", params],
+    queryFn: async () => {
+      const response = await api.get("/reports/requisitions", { params });
+      return response.data;
+    },
+    enabled: !!Object.keys(params).length || params.autoLoad,
+  });
+};
+
+export const useTransactionReport = (params = {}) => {
+  return useQuery({
+    queryKey: ["transaction-report", params],
+    queryFn: async () => {
+      const response = await api.get("/reports/transactions", { params });
+      return response.data;
+    },
+    enabled: !!Object.keys(params).length || params.autoLoad,
+  });
+};
+
+// Download reports
+export const useDownloadReport = () => {
+  return useMutation({
+    mutationFn: async ({ type, params }) => {
+      const response = await api.get(`/reports/${type}`, {
+        params: { ...params, format: 'csv' },
+        responseType: 'blob'
+      });
+      
+      // Create download link
+      const blob = new Blob([response.data], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${type}-report-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      return response.data;
+    },
+  });
+};
+
+// Advanced audit statistics
+export const useAuditStats = (params = {}) => {
+  return useQuery({
+    queryKey: ["audit-stats", params],
+    queryFn: async () => {
+      const [auditData, transactionStats] = await Promise.all([
+        api.get("/reports/audit", { params: { ...params, limit: 1000 } }),
+        api.get("/transactions/stats", { params })
+      ]);
+      
+      return {
+        auditTrail: auditData.data,
+        transactionStats: transactionStats.data
+      };
+    },
+    refetchInterval: 300000, // 5 minutes
+  });
+};
+
+// Compliance metrics
+export const useComplianceMetrics = (params = {}) => {
+  return useQuery({
+    queryKey: ["compliance-metrics", params],
+    queryFn: async () => {
+      const [requisitions, transactions, serviceRequests] = await Promise.all([
+        api.get("/requisitions", { params: { ...params, limit: 1000 } }),
+        api.get("/transactions", { params: { ...params, limit: 1000 } }),
+        api.get("/service-requests", { params: { ...params, limit: 1000 } })
+      ]);
+      
+      return {
+        requisitions: requisitions.data,
+        transactions: transactions.data,
+        serviceRequests: serviceRequests.data
+      };
+    },
+    refetchInterval: 300000,
+  });
+};

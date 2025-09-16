@@ -27,6 +27,10 @@ export const getDashboardStats = async (req, res) => {
         dashboardData = await getDepartmentHeadDashboard(departmentId, userId);
         break;
 
+      case "AUDITOR":
+        dashboardData = await getAuditorDashboard();
+        break;
+
       default:
         dashboardData = commonStats;
     }
@@ -415,6 +419,165 @@ async function getDepartmentHeadDashboard(departmentId, userId) {
         name: `${user.firstName} ${user.lastName}`,
         role: user.role,
       })),
+    },
+  };
+}
+
+// Auditor-specific dashboard data
+async function getAuditorDashboard() {
+  const [
+    totalUsers,
+    totalDepartments, 
+    totalItems,
+    recentTransactions,
+    systemMetrics,
+    auditTrail,
+    complianceData,
+    transactionStats
+  ] = await Promise.all([
+    // Basic system counts
+    prisma.user.count(),
+    prisma.department.count(),
+    prisma.item.count(),
+    
+    // Recent transactions for audit trail
+    prisma.transaction.findMany({
+      include: {
+        item: {
+          select: { name: true, unit: true },
+        },
+        user: {
+          select: { firstName: true, lastName: true, role: true },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 20,
+    }),
+    
+    // System health metrics
+    Promise.resolve({
+      databaseConnections: 1, // Mock data - could be real metrics
+      systemUptime: process.uptime(),
+      memoryUsage: process.memoryUsage(),
+      nodeVersion: process.version,
+    }),
+    
+    // Recent audit-worthy activities
+    prisma.requisition.findMany({
+      where: {
+        OR: [
+          { status: "APPROVED" },
+          { status: "REJECTED" },
+          { status: "FULFILLED" }
+        ],
+        processedAt: { not: null }
+      },
+      include: {
+        department: { select: { name: true } },
+        createdBy: { select: { firstName: true, lastName: true } },
+        processedBy: { select: { firstName: true, lastName: true, role: true } },
+      },
+      orderBy: { processedAt: "desc" },
+      take: 15,
+    }),
+    
+    // Compliance metrics
+    Promise.all([
+      prisma.requisition.count({ where: { status: "PENDING" } }),
+      prisma.requisition.count({ 
+        where: { 
+          createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }
+        } 
+      }),
+      prisma.item.count({ 
+        where: { 
+          quantity: { lte: prisma.item.fields.minQuantity } 
+        } 
+      }),
+    ]).then(([pendingCount, weeklyReqs, lowStockCount]) => ({
+      pendingRequisitions: pendingCount,
+      weeklyRequisitions: weeklyReqs,
+      lowStockAlerts: lowStockCount,
+      complianceScore: Math.max(0, 100 - (pendingCount * 2) - (lowStockCount * 3))
+    })),
+    
+    // Transaction statistics by type
+    prisma.transaction.groupBy({
+      by: ["type"],
+      _count: { id: true },
+      _sum: { quantity: true },
+      where: {
+        createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }
+      }
+    })
+  ]);
+
+  return {
+    // System overview
+    systemOverview: {
+      totalUsers,
+      totalDepartments,
+      totalItems,
+      systemHealth: "Operational",
+      lastAuditDate: new Date().toISOString(),
+    },
+    
+    // System information for auditors
+    systemInfo: {
+      nodeVersion: systemMetrics.nodeVersion,
+      uptime: Math.floor(systemMetrics.systemUptime / 3600), // Convert to hours
+      memoryUsage: {
+        used: Math.round(systemMetrics.memoryUsage.heapUsed / 1024 / 1024), // MB
+        total: Math.round(systemMetrics.memoryUsage.heapTotal / 1024 / 1024), // MB
+      },
+      databaseStatus: "Connected",
+      environment: process.env.NODE_ENV || "development",
+    },
+    
+    // Recent audit trail
+    auditTrail: recentTransactions.map((transaction) => ({
+      id: transaction.id,
+      type: transaction.type,
+      action: `${transaction.type}: ${transaction.item.name}`,
+      quantity: Math.abs(transaction.quantity),
+      unit: transaction.item.unit,
+      user: transaction.user 
+        ? `${transaction.user.firstName} ${transaction.user.lastName}`
+        : "System",
+      userRole: transaction.user?.role || "SYSTEM",
+      timestamp: transaction.createdAt,
+      notes: transaction.notes,
+    })),
+    
+    // Compliance and oversight data
+    complianceMetrics: complianceData,
+    
+    // Recent decisions for audit review
+    recentDecisions: auditTrail.map((decision) => ({
+      id: decision.id,
+      type: "REQUISITION",
+      title: decision.title,
+      status: decision.status,
+      department: decision.department.name,
+      requestedBy: `${decision.createdBy.firstName} ${decision.createdBy.lastName}`,
+      approvedBy: decision.processedBy 
+        ? `${decision.processedBy.firstName} ${decision.processedBy.lastName}`
+        : null,
+      approverRole: decision.processedBy?.role || null,
+      processedAt: decision.processedAt,
+      createdAt: decision.createdAt,
+    })),
+    
+    // Transaction analytics
+    transactionAnalytics: {
+      byType: transactionStats.reduce((acc, stat) => {
+        acc[stat.type] = {
+          count: stat._count.id,
+          totalQuantity: Math.abs(stat._sum.quantity || 0),
+        };
+        return acc;
+      }, {}),
+      totalTransactions: transactionStats.reduce((sum, stat) => sum + stat._count.id, 0),
     },
   };
 }

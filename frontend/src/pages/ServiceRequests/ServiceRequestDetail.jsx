@@ -19,6 +19,7 @@ import { ArrowBack as BackIcon, Print as PrintIcon, Delete as DeleteIcon } from 
 import { useServiceRequestDetail, useUpdateServiceRequestStatus } from "../../services/queries";
 import { useState } from "react";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
+import { useAuth } from "../../contexts/AuthContext";
 
 const statusColor = (status) => {
   const map = { PENDING: "warning", APPROVED: "success", REJECTED: "error" };
@@ -28,6 +29,7 @@ const statusColor = (status) => {
 const ServiceRequestDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { data: request, isLoading, error } = useServiceRequestDetail(id);
   const updateStatus = useUpdateServiceRequestStatus();
 
@@ -89,9 +91,11 @@ const ServiceRequestDetail = () => {
           Service Request Details
         </Typography>
         <Chip label={request.status} color={statusColor(request.status)} sx={{ ml: "auto" }} />
-        <Button variant="outlined" color="error" startIcon={<DeleteIcon />} onClick={handleDelete} sx={{ ml: 1 }}>
-          Delete
-        </Button>
+        {user?.role !== "AUDITOR" && (
+          <Button variant="outlined" color="error" startIcon={<DeleteIcon />} onClick={handleDelete} sx={{ ml: 1 }}>
+            Delete
+          </Button>
+        )}
       </Box>
 
       <Grid container spacing={3}>
@@ -113,19 +117,21 @@ const ServiceRequestDetail = () => {
 
         {/* Right: Review and info */}
         <Grid item xs={12} md={4}>
-          <Paper sx={{ p: 3, mb: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              Review Decision
-            </Typography>
-            <Box sx={{ display: "flex", gap: 1 }}>
-              <Button variant="contained" color="success" onClick={handleApprove}>
-                Approve
-              </Button>
-              <Button variant="outlined" color="error" onClick={() => setRejectOpen(true)}>
-                Reject
-              </Button>
-            </Box>
-          </Paper>
+          {user?.role !== "AUDITOR" && (
+            <Paper sx={{ p: 3, mb: 2 }}>
+              <Typography variant="h6" gutterBottom>
+                Review Decision
+              </Typography>
+              <Box sx={{ display: "flex", gap: 1 }}>
+                <Button variant="contained" color="success" onClick={handleApprove}>
+                  Approve
+                </Button>
+                <Button variant="outlined" color="error" onClick={() => setRejectOpen(true)}>
+                  Reject
+                </Button>
+              </Box>
+            </Paper>
+          )}
 
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
