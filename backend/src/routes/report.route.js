@@ -4,6 +4,7 @@ import {
   generateTransactionReport,
   generateRequisitionReport,
   generateAuditReport,
+  generateFinancialReport,
 } from "../controllers/report.controller.js";
 import { authenticateToken, authorize } from "../middleware/auth.js";
 
@@ -30,5 +31,11 @@ router.get(
 );
 
 router.get("/audit", authorize("ADMIN", "AUDITOR"), generateAuditReport);
+
+router.get(
+  "/financial",
+  authorize("ADMIN", "AUDITOR", "PROCUREMENT_OFFICER"),
+  generateFinancialReport
+);
 
 export default router;

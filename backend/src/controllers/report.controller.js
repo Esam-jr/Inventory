@@ -486,3 +486,150 @@ export const generateAuditReport = async (req, res) => {
     res.status(500).json({ error: "Failed to generate audit report" });
   }
 };
+
+// Generate financial summary report
+export const generateFinancialReport = async (req, res) => {
+  const { format = "json", startDate, endDate } = req.query;
+
+  try {
+    let whereClause = {};
+
+    // Date filter
+    if (startDate || endDate) {
+      whereClause.createdAt = {};
+      if (startDate) whereClause.createdAt.gte = new Date(startDate);
+      if (endDate) whereClause.createdAt.lte = new Date(endDate);
+    }
+
+    // Get financial data from multiple sources
+    const [items, requisitions, transactions] = await Promise.all([
+      prisma.item.findMany({
+        select: {
+          id: true,
+          name: true,
+          quantity: true,
+          category: {
+            select: { name: true },
+          },
+        },
+      }),
+      prisma.requisition.findMany({
+        where: {
+          ...whereClause,
+          status: { in: ["APPROVED", "FULFILLED"] },
+        },
+        include: {
+          items: {
+            include: {
+              item: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      }),
+      prisma.transaction.findMany({
+        where: whereClause,
+        include: {
+          item: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      }),
+    ]);
+
+    // Calculate inventory value (using estimated $10 per unit as unitPrice is not in schema)
+    const estimatedUnitPrice = 10; // Estimated value since unitPrice field doesn't exist
+    const totalInventoryValue = items.reduce((sum, item) => {
+      return sum + (item.quantity * estimatedUnitPrice);
+    }, 0);
+
+    // Calculate requisition costs
+    const totalRequisitionValue = requisitions.reduce((sum, req) => {
+      const reqValue = req.items.reduce((reqSum, item) => {
+        return reqSum + (item.quantity * estimatedUnitPrice);
+      }, 0);
+      return sum + reqValue;
+    }, 0);
+
+    // Calculate transaction impact
+    const transactionValue = transactions.reduce((sum, trans) => {
+      const value = Math.abs(trans.quantity) * estimatedUnitPrice;
+      return trans.type === 'ISSUE' ? sum - value : sum + value;
+    }, 0);
+
+    const reportData = {
+      summary: {
+        totalInventoryValue: Math.round(totalInventoryValue * 100) / 100,
+        totalRequisitionValue: Math.round(totalRequisitionValue * 100) / 100,
+        transactionImpact: Math.round(transactionValue * 100) / 100,
+        totalItems: items.length,
+        totalRequisitions: requisitions.length,
+        totalTransactions: transactions.length,
+      },
+      inventoryByCategory: items.reduce((acc, item) => {
+        const category = item.category.name;
+        if (!acc[category]) {
+          acc[category] = { count: 0, value: 0 };
+        }
+        acc[category].count += 1;
+        acc[category].value += item.quantity * estimatedUnitPrice;
+        return acc;
+      }, {}),
+      period: {
+        startDate: startDate || "all time",
+        endDate: endDate || "all time",
+      },
+    };
+
+    if (format === "csv") {
+      try {
+        // Flatten data for CSV
+        const csvData = [
+          {
+            metric: "Total Inventory Value",
+            value: reportData.summary.totalInventoryValue,
+            period: `${reportData.period.startDate} to ${reportData.period.endDate}`,
+          },
+          {
+            metric: "Total Requisition Value",
+            value: reportData.summary.totalRequisitionValue,
+            period: `${reportData.period.startDate} to ${reportData.period.endDate}`,
+          },
+          {
+            metric: "Transaction Impact",
+            value: reportData.summary.transactionImpact,
+            period: `${reportData.period.startDate} to ${reportData.period.endDate}`,
+          },
+        ];
+
+        const parser = new Parser();
+        const csv = parser.parse(csvData);
+
+        res.setHeader("Content-Type", "text/csv");
+        res.setHeader(
+          "Content-Disposition",
+          `attachment; filename=financial-summary-${
+            new Date().toISOString().split("T")[0]
+          }.csv`
+        );
+        res.send(csv);
+      } catch (csvError) {
+        console.error("CSV conversion error:", csvError);
+        res.status(500).json({ error: "Failed to generate CSV report" });
+      }
+    } else {
+      res.json({
+        generatedAt: new Date().toISOString(),
+        ...reportData,
+      });
+    }
+  } catch (error) {
+    console.error("Generate financial report error:", error);
+    res.status(500).json({ error: "Failed to generate financial report" });
+  }
+};
