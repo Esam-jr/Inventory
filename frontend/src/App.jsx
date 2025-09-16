@@ -28,6 +28,7 @@ import ReportBuilder from "./pages/Reports/ReportBuilder";
 import ReportView from "./pages/Reports/ReportView";
 import Profile from "./pages/Profile/Profile";
 import UserManagment from "./pages/Userss/UserManagment";
+import DepartmentManagement from "./pages/Admin/DepartmentManagement";
 import TransactionList from "./pages/Transactions/TransactionList";
 import ServiceRequestList from "./pages/ServiceRequests/ServiceRequestList";
 import ServiceRequestForm from "./pages/ServiceRequests/ServiceRequestForm";
@@ -122,6 +123,14 @@ function AppContent() {
                       element={
                         <ProtectedRoute requiredRoles={["ADMIN"]}>
                           <UserManagment />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/departments"
+                      element={
+                        <ProtectedRoute requiredRoles={["ADMIN"]}>
+                          <DepartmentManagement />
                         </ProtectedRoute>
                       }
                     />

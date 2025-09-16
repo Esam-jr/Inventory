@@ -20,6 +20,7 @@ import {
   Settings as SettingsIcon,
   History as TransactionIcon,
   HomeWork as HomeWorkIcon,
+  Business as BusinessIcon,
 } from "@mui/icons-material";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -40,6 +41,12 @@ const menuItems = [
     text: "User Management",
     icon: <UserIcon />,
     path: "/users",
+    roles: ["ADMIN"],
+  },
+  {
+    text: "Department Management",
+    icon: <BusinessIcon />,
+    path: "/departments",
     roles: ["ADMIN"],
   },
   {

@@ -353,6 +353,16 @@ export const useCreateDepartment = () => {
     },
   });
 };
+export const useUpdateDepartment = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...departmentData }) => api.put(`/departments/${id}`, departmentData),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["departments"]);
+    },
+  });
+};
+
 export const useDeleteDepartment = () => {
   const queryClient = useQueryClient();
   return useMutation({
