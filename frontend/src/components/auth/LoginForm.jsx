@@ -1,21 +1,20 @@
 import { useState } from "react";
 import {
   Box,
-  Paper,
   TextField,
   Button,
   Typography,
   Alert,
   InputAdornment,
   IconButton,
-  Divider,
+  Link,
+  useTheme,
 } from "@mui/material";
 import {
   Visibility,
   VisibilityOff,
-  Login as LoginIcon,
-  AccountCircle,
-  Lock,
+  Email as EmailIcon,
+  Lock as LockIcon,
 } from "@mui/icons-material";
 import { useAuth } from "../../contexts/AuthContext";
 import { useThemeContext } from "../../contexts/ThemeContext";
@@ -31,6 +30,7 @@ const LoginForm = () => {
 
   const { login } = useAuth();
   const { mode } = useThemeContext();
+  const theme = useTheme();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -61,37 +61,6 @@ const LoginForm = () => {
     setShowPassword(!showPassword);
   };
 
-  const demoAccounts = [
-    { email: "admin@city.gov", password: "admin123", role: "Admin" },
-    {
-      email: "storekeeper@city.gov",
-      password: "store123",
-      role: "Storekeeper",
-    },
-    {
-      email: "procurement@city.gov",
-      password: "procure123",
-      role: "Procurement",
-    },
-    {
-      email: "head.publicworks@city.gov",
-      password: "dept123",
-      role: "Department Head",
-    },
-    {
-      email: "auditor@city.gov",
-      password: "auditor123",
-      role: "Department Auditor",
-    },
-  ];
-
-  const fillDemoAccount = (account) => {
-    setCredentials({
-      email: account.email,
-      password: account.password,
-    });
-  };
-
   return (
     <Box
       sx={{
@@ -99,154 +68,182 @@ const LoginForm = () => {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background:
-          mode === "dark"
-            ? "linear-gradient(135deg, #2c3e50 0%, #34495e 100%)"
-            : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-        p: 2,
+        backgroundColor: mode === "dark" ? "#121212" : "#ffffff",
       }}
     >
-      <Paper
-        elevation={8}
+      <Box
         sx={{
-          p: 4,
-          width: "100%",
-          maxWidth: "450px",
-          borderRadius: 3,
-          background:
-            mode === "dark"
-              ? "rgba(33, 33, 33, 0.95)"
-              : "rgba(255, 255, 255, 0.95)",
-          backdropFilter: "blur(10px)",
+          display: "flex",
+          width: "80%",
+          maxWidth: "1400px",
+          height: "75vh",
+          minHeight: "600px",
+          maxHeight: "900px",
+          borderRadius: { md: 3 },
+          overflow: "hidden",
+          boxShadow: { md: 8 },
         }}
       >
-        <Box textAlign="center" mb={3}>
-          <AccountCircle sx={{ fontSize: 64, color: "primary.main", mb: 1 }} />
-          <Typography
-            variant="h4"
-            component="h1"
-            gutterBottom
-            fontWeight="bold"
-          >
-            City Inventory System
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Sign in to access your account
-          </Typography>
+        {/* Left Side */}
+        <Box
+          sx={{
+            flex: { xs: 1, md: "0 0 42%" },
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: { xs: 3, sm: 4, md: 6 },
+            backgroundColor: mode === "dark" ? "#1a1a1a" : "#fafafa",
+          }}
+        >
+          <Box sx={{ width: "100%", maxWidth: 400 }}>
+            <Box sx={{ textAlign: "center", mb: 3 }}>
+              <Box sx={{ mb: 3, display: "flex", justifyContent: "center" }}>
+                <img
+                  src="/logo.png"
+                  alt="App Logo"
+                  style={{ width: 120, height: 120, objectFit: "contain" }}
+                />
+              </Box>
+              <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+                Welcome Back
+              </Typography>
+            </Box>
+
+            {error && (
+              <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
+                {error}
+              </Alert>
+            )}
+
+            {/* Login Form */}
+            <Box component="form" onSubmit={handleSubmit}>
+              <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+                Email
+              </Typography>
+              <TextField
+                fullWidth
+                placeholder="Enter your email"
+                name="email"
+                type="email"
+                value={credentials.email}
+                onChange={handleChange}
+                required
+                disabled={loading}
+                sx={{ mb: 3 }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <EmailIcon sx={{ color: "action.active" }} />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+
+              <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+                Password
+              </Typography>
+              <TextField
+                fullWidth
+                placeholder="Enter your password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                value={credentials.password}
+                onChange={handleChange}
+                required
+                disabled={loading}
+                sx={{ mb: 2 }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <LockIcon sx={{ color: "action.active" }} />
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={handleTogglePassword}
+                        edge="end"
+                        disabled={loading}
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                size="large"
+                disabled={loading}
+                sx={{
+                  pb: 1,
+                  pt: 2,
+                  mb: 3,
+                  borderRadius: 2,
+                  textTransform: "none",
+                  fontWeight: 600,
+                }}
+              >
+                {loading ? "Signing in..." : "Sign in"}
+              </Button>
+            </Box>
+
+            {/* Sign in link */}
+            <Box sx={{ textAlign: "center" }}>
+              <Typography variant="body2" color="text.secondary">
+                Having any problems or Don't have an account ?{" "}
+                <Link href="#" sx={{ textDecoration: "none", fontWeight: 600 }}>
+                  Contact the Admin{" "}
+                </Link>
+              </Typography>
+            </Box>
+          </Box>
         </Box>
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 3 }}>
-            {error}
-          </Alert>
-        )}
-
-        <Box component="form" onSubmit={handleSubmit}>
-          <TextField
-            fullWidth
-            label="Email Address"
-            name="email"
-            type="email"
-            value={credentials.email}
-            onChange={handleChange}
-            required
-            disabled={loading}
-            sx={{ mb: 2 }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <AccountCircle color="action" />
-                </InputAdornment>
-              ),
-            }}
-          />
-
-          <TextField
-            fullWidth
-            label="Password"
-            name="password"
-            type={showPassword ? "text" : "password"}
-            value={credentials.password}
-            onChange={handleChange}
-            required
-            disabled={loading}
-            sx={{ mb: 3 }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Lock color="action" />
-                </InputAdornment>
-              ),
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton onClick={handleTogglePassword} edge="end">
-                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-          />
-
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            size="large"
-            disabled={loading}
-            startIcon={<LoginIcon />}
-            sx={{
-              py: 1.5,
-              borderRadius: 2,
-              fontSize: "1.1rem",
-            }}
-          >
-            {loading ? "Signing in..." : "Sign In"}
-          </Button>
-        </Box>
-
-        <Divider sx={{ my: 3 }}>
-          <Typography variant="body2" color="text.secondary">
-            Demo Accounts
-          </Typography>
-        </Divider>
-
-        <Box sx={{ mt: 2 }}>
-          <Typography variant="body2" color="text.secondary" gutterBottom>
-            Try these demo accounts:
-          </Typography>
-
-          {demoAccounts.map((account, index) => (
-            <Button
-              key={index}
-              fullWidth
-              variant="outlined"
-              size="small"
-              onClick={() => fillDemoAccount(account)}
+        {/* Right Side*/}
+        <Box
+          sx={{
+            flex: "0 0 58%",
+            display: { xs: "none", md: "flex" },
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 6,
+            backgroundColor: mode === "dark" ? "#0f1419" : "#1a237e",
+            color: "white",
+          }}
+        >
+          <Box sx={{ maxWidth: 500, mx: "auto" }}>
+            <Typography
+              variant="h3"
               sx={{
-                mt: 1,
-                justifyContent: "flex-start",
-                textTransform: "none",
+                fontWeight: 700,
+                mb: 4,
+                lineHeight: 1.2,
               }}
             >
-              <Box textAlign="left">
-                <Typography variant="body2" noWrap>
-                  {account.role}
-                </Typography>
-                <Typography variant="caption" color="text.secondary" noWrap>
-                  {account.email}
-                </Typography>
-              </Box>
-            </Button>
-          ))}
-        </Box>
+              Adama City Administration{" "}
+            </Typography>
 
-        <Box sx={{ mt: 3, textAlign: "center" }}>
-          <Typography variant="caption" color="text.secondary">
-            v{import.meta.env.VITE_APP_VERSION} •{" "}
-            {import.meta.env.VITE_APP_NAME}
-          </Typography>
+            <Box
+              sx={{
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
+                borderRadius: 3,
+                padding: 3,
+                backdropFilter: "blur(10px)",
+              }}
+            >
+              <Typography variant="subtitle2" sx={{ mb: 2, opacity: 0.8 }}>
+                Inventory Managment System{" "}
+              </Typography>
+              <img src="/inv.svg" alt="Inventory Illustration" width="100%" />
+            </Box>
+          </Box>
         </Box>
-      </Paper>
+      </Box>
     </Box>
   );
 };
