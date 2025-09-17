@@ -21,7 +21,6 @@ A modern, full-stack inventory management solution designed for organizations th
 - [Deployment](#deployment)
 - [Contributing](#contributing)
 - [License](#license)
-- [Support](#support)
 
 ## 🎯 Overview
 
@@ -448,8 +447,6 @@ docker-compose -f docker-compose.prod.yml up -d
 - **Vercel/Netlify**: Frontend deployment with serverless backend
 
 ## 🤝 Contributing
-
-We welcome contributions! Please read our [Contributing Guidelines](CONTRIBUTING.md) before submitting pull requests.
 
 ### Development Process
 1. Fork the repository
