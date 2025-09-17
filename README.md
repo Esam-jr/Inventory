@@ -469,19 +469,7 @@ We welcome contributions! Please read our [Contributing Guidelines](CONTRIBUTING
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🛟 Support
-
-### Documentation
-- [User Manual](docs/user-manual.md)
-- [API Reference](docs/api-reference.md)
-- [Deployment Guide](docs/deployment.md)
-
-### Getting Help
-- **Issues**: [GitHub Issues](https://github.com/your-username/smart-inventory-system/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-username/smart-inventory-system/discussions)
-- **Email**: support@yourdomain.com
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for detail.
 
 ### Troubleshooting
 
@@ -529,4 +517,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Built with ❤️ for efficient inventory management**
 
-*For more information, visit our [documentation site](https://docs.yourdomain.com) or contact our support team.*
