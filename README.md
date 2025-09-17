@@ -503,14 +503,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## 👏 Acknowledgments
-
-- **Material-UI Team**: For the excellent component library
-- **Prisma Team**: For the amazing database toolkit
-- **React Team**: For the powerful frontend framework
-- **Contributors**: All the developers who have contributed to this project
-
----
-
 **Built with ❤️ for efficient inventory management**
 
