@@ -7,7 +7,7 @@ A modern, full-stack inventory management solution designed for organizations th
 ## 📋 Table of Contents
 
 - [Overview](#overview)
-- [Features](#features)
+- [✨ Features](#features)
 - [Technology Stack](#technology-stack)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
