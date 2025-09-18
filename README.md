@@ -22,7 +22,7 @@ A modern, full-stack inventory management solution designed for organizations th
 - [Contributing](#contributing)
 - [License](#license)
 
-## 🎯 Overview
+## Overview
 
 The Smart Inventory Management System is a comprehensive solution that helps organizations manage their inventory efficiently. It features role-based access control, real-time tracking, automated reporting, and a modern responsive interface.
 
