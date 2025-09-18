@@ -7,7 +7,7 @@ A modern, full-stack inventory management solution designed for organizations th
 ## 📋 Table of Contents
 
 - [Overview](#overview)
-- [✨ Features](#features)
+- [Features](#features)
 - [Technology Stack](#technology-stack)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
@@ -34,7 +34,7 @@ The Smart Inventory Management System is a comprehensive solution that helps org
 - **Audit Trail**: Complete tracking of all system activities
 - **Mobile Responsive**: Access from any device, anywhere
 
-## ✨ Features
+## Features
 
 ### 📊 Inventory Management
 - **Item Tracking**: Add, edit, and monitor inventory items
@@ -69,7 +69,7 @@ The Smart Inventory Management System is a comprehensive solution that helps org
 - **Data Validation**: Server-side and client-side validation
 - **HTTPS Support**: Secure data transmission
 
-## 🛠 Technology Stack
+## Technology Stack
 
 ### Backend
 - **Node.js**: JavaScript runtime environment
@@ -109,7 +109,7 @@ Before you begin, ensure you have the following installed:
 - **Storage**: 1GB free space
 - **Network**: Internet connection for package installation
 
-## 🚀 Installation
+## Installation
 
 ### 1. Clone the Repository
 ```bash
@@ -151,7 +151,7 @@ Create environment file:
 cp .env.example .env
 ```
 
-## ⚙️ Configuration
+##  Configuration
 
 ### Backend Configuration (`.env`)
 ```env
@@ -206,7 +206,7 @@ npx prisma migrate dev --name init
 npx prisma db seed
 ```
 
-## 🎮 Usage
+## Usage
 
 ### Development Mode
 
@@ -245,7 +245,7 @@ npm start
 3. **Login**: Use your admin credentials
 4. **Setup System**: Create departments, categories, and initial inventory
 
-## 📚 API Documentation
+## API Documentation
 
 ### Authentication Endpoints
 ```http
@@ -294,7 +294,7 @@ DELETE /api/users/:id
 
 For detailed API documentation, visit `/api/docs` when the server is running.
 
-## 👥 User Roles & Permissions
+## User Roles & Permissions
 
 ### 🔧 Admin
 - Full system access
@@ -329,7 +329,7 @@ For detailed API documentation, visit `/api/docs` when the server is running.
 - System monitoring
 - Compliance checking
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 smart-inventory-system/
@@ -365,7 +365,7 @@ smart-inventory-system/
 └── package.json
 ```
 
-## 🔧 Development
+##  Development
 
 ### Code Style
 - **ESLint**: Enforces code quality and consistency
@@ -398,7 +398,7 @@ npm run lint         # Run ESLint
 3. Run database migrations
 4. Start development servers
 
-## 🧪 Testing
+##  Testing
 
 ### Backend Testing
 ```bash
@@ -421,7 +421,7 @@ npm run test:coverage      # Coverage report
 - **Integration Tests**: API endpoint testing
 - **E2E Tests**: Complete user workflow testing
 
-## 🚀 Deployment
+## Deployment
 
 ### Docker Deployment
 ```bash
@@ -446,7 +446,7 @@ docker-compose -f docker-compose.prod.yml up -d
 - **DigitalOcean**: Droplet + Managed Database
 - **Vercel/Netlify**: Frontend deployment with serverless backend
 
-## 🤝 Contributing
+## Contributing
 
 ### Development Process
 1. Fork the repository
@@ -464,7 +464,7 @@ docker-compose -f docker-compose.prod.yml up -d
 - Include tests for new features
 - Update documentation as needed
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for detail.
 
@@ -485,7 +485,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
    - Clear node_modules: `rm -rf node_modules && npm install`
    - Check Node.js version compatibility
 
-## 🏗️ Roadmap
+## Roadmap
 
 ### Version 2.0
 - [ ] Mobile app development
