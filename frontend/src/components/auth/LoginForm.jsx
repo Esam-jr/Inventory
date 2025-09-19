@@ -225,7 +225,7 @@ const LoginForm = () => {
                 lineHeight: 1.2,
               }}
             >
-              Adama City Administration{" "}
+              Smart Inventory Managment System{" "}
             </Typography>
 
             <Box
